@@ -2,10 +2,12 @@ package com.k10.musicapp
 
 import android.app.Application
 import android.content.Context
+import android.content.Intent
 import android.net.ConnectivityManager
 import android.net.ConnectivityManager.NetworkCallback
 import android.net.Network
 import androidx.lifecycle.MutableLiveData
+import com.k10.musicapp.services.PlayerService
 import dagger.hilt.android.HiltAndroidApp
 
 
@@ -14,14 +16,16 @@ class BaseApplication : Application() {
     override fun onCreate() {
         super.onCreate()
 
+        val i = Intent(this, PlayerService::class.java)
+        startService(i)
+
         networkStatus()
     }
 
-
-    //Live Data to be observed in ViewModel for notify network Changes
+    //Live Data to be observed in ViewModel for notifying network changes
     val networkConnected: MutableLiveData<Boolean> = MutableLiveData()
 
-    private lateinit var connectivityManager: ConnectivityManager
+    private var connectivityManager: ConnectivityManager? = null
 
     private val networkCallback = object : NetworkCallback() {
         override fun onAvailable(network: Network) {
@@ -34,13 +38,19 @@ class BaseApplication : Application() {
     }
 
     private fun networkStatus() {
-        connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        if (connectivityManager == null)
+            connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
 
-        connectivityManager.registerDefaultNetworkCallback(networkCallback)
+        connectivityManager?.registerDefaultNetworkCallback(networkCallback)
     }
 
     override fun onTerminate() {
         super.onTerminate()
-        connectivityManager.unregisterNetworkCallback(networkCallback)
+        if (connectivityManager != null)
+            connectivityManager!!.unregisterNetworkCallback(networkCallback)
+        connectivityManager = null
+
+        val i = Intent(this, PlayerService::class.java)
+        stopService(i)
     }
 }

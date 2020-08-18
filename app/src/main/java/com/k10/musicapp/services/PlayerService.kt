@@ -12,7 +12,6 @@ class PlayerService : Service() {
 
     companion object {
         private const val TAG = "PlayerService"
-        private const val music_url = "https://mp3d.jamendo.com/?trackid=799037&format=mp32"
         private val musicPlayer: MusicPlayer = MusicPlayer()
         private var currentSong: SongObject? = null
     }
@@ -49,12 +48,10 @@ class PlayerService : Service() {
 
     override fun onDestroy() {
         super.onDestroy()
+        musicPlayer.destroy()
         stopSelf()
 
         Log.d(TAG, "onDestroy called")
-//        mediaPlayer.stop()
-//        mediaPlayer.reset()
-//        mediaPlayer.release()
     }
 
     fun makeToast(){
@@ -62,38 +59,20 @@ class PlayerService : Service() {
     }
 
     fun pausePlayback(){
-//        mediaPlayer.pause()
+        musicPlayer.pausePlayback()
     }
 
     fun playPlayback(){
-//        mediaPlayer.start()
+        musicPlayer.playPlayback()
     }
 
     fun seekPlayback(seekTo: Int = 0){
-//        if(mediaPlayer.isPlaying)
-//            mediaPlayer.seekTo(seekTo)
+        musicPlayer.moveSeekTo(seekTo)
     }
 
-//    private fun playThisSong(uri: String) {
-//
-//        if (mediaPlayer.isPlaying) {
-//            mediaPlayer.stop()
-//            mediaPlayer.reset()
-//        }
-//
-//        CoroutineScope(IO).launch {
-//            mediaPlayer.setDataSource(uri)
-//            mediaPlayer.prepare()
-//            withContext(Main) {
-//                mediaPlayer.start()
-//                Toast.makeText(
-//                    applicationContext,
-//                    "Duration: ${mediaPlayer.duration}",
-//                    Toast.LENGTH_SHORT
-//                ).show()
-//            }
-//        }
-//    }
+    fun playThisSong(uri: String) {
+        musicPlayer.playNewMusic(uri)
+    }
 //
 //    private fun playThisSong(songObject: SongObject) {
 //        mediaPlayer.reset()

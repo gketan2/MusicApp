@@ -9,6 +9,7 @@ import android.os.IBinder
 import android.util.Log
 import android.view.View
 import android.widget.Button
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.observe
@@ -25,9 +26,11 @@ class SplashActivity : AppCompatActivity(), View.OnClickListener {
     private lateinit var pauseButton: Button
     private lateinit var stopButton: Button
     private lateinit var temp: Button
+    private lateinit var textView: TextView
 
     private lateinit var playerService: PlayerService
     private var isBounded: Boolean = false
+    private val music_url = "https://mp3d.jamendo.com/?trackid=799037&format=mp32"
 
     private val TAG = "SplashActivity"
 
@@ -39,6 +42,7 @@ class SplashActivity : AppCompatActivity(), View.OnClickListener {
         pauseButton = findViewById(R.id.pause)
         stopButton = findViewById(R.id.seek)
         temp = findViewById(R.id.temp)
+        textView = findViewById(R.id.text)
 
         playButton.setOnClickListener(this)
         pauseButton.setOnClickListener(this)
@@ -69,8 +73,9 @@ class SplashActivity : AppCompatActivity(), View.OnClickListener {
     override fun onClick(v: View?) {
         when(v?.id){
             R.id.play -> {
-                if(isBounded){
-                    playerService.playPlayback()
+                if (isBounded) {
+                    playerService.playThisSong(music_url)
+                    Log.d(TAG, "playing this song")
                 }
             }
             R.id.pause -> {

@@ -16,6 +16,7 @@ class BaseApplication : Application() {
     override fun onCreate() {
         super.onCreate()
 
+        //start Player Service as soon as the Application is started
         val i = Intent(this, PlayerService::class.java)
         startService(i)
 

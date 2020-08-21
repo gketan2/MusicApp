@@ -12,12 +12,16 @@ import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.Observer
 import androidx.lifecycle.observe
 import com.k10.musicapp.BaseApplication
 import com.k10.musicapp.R
 import com.k10.musicapp.services.PlayerService
+import com.k10.musicapp.services.PlayerState
 import com.k10.musicapp.ui.main.MainActivity
+import com.k10.musicapp.utils.CommandOrigin
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.android.synthetic.main.activity_splash.*
 
 @AndroidEntryPoint
 class SplashActivity : AppCompatActivity(), View.OnClickListener {
@@ -55,6 +59,42 @@ class SplashActivity : AppCompatActivity(), View.OnClickListener {
             }
     }
 
+    private fun subscribeObserver(){
+        playerService.getPlaybackLiveData().observe(this, Observer {
+            when (it.status) {
+                PlayerState.NONE -> {
+                }
+                PlayerState.ERROR -> {
+                    Toast.makeText(this, it.message, Toast.LENGTH_SHORT).show()
+                }
+                PlayerState.IDLE -> {
+                }
+                PlayerState.INITIALIZED -> {
+                }
+                PlayerState.PREPARING -> {
+                }
+                PlayerState.PREPARED -> {
+
+                }
+                PlayerState.PLAYING -> {
+                    playbackElapsed.text = "${it.data.playedMinute}:%02d".format(it.data.playedSecond)
+                    playbackTotal.text = "${it.data.durationMinute}:%02d".format(it.data.durationSecond)
+                    playbackSeekbar.progress = it.data.playedMilli * 1000 / it.data.durationMilli
+                }
+                PlayerState.PAUSED -> {
+                }
+                PlayerState.STOPPED -> {
+                }
+                PlayerState.PLAYBACK_COMPLETE -> {
+                }
+            }
+        })
+    }
+
+    fun unsubscribeObserver(){
+        playerService.getPlaybackLiveData().removeObservers(this)
+    }
+
     override fun onStart() {
         super.onStart()
         Intent(this, PlayerService::class.java).also{
@@ -74,7 +114,8 @@ class SplashActivity : AppCompatActivity(), View.OnClickListener {
         when(v?.id){
             R.id.play -> {
                 if (isBounded) {
-                    playerService.playThisSong(music_url)
+                    playerService.playPlayback(CommandOrigin.FLOATING_BAR)
+//                    playerService.playThisUrl(music_url)
                     Log.d(TAG, "playing this song")
                 }
             }
@@ -85,7 +126,7 @@ class SplashActivity : AppCompatActivity(), View.OnClickListener {
             }
             R.id.seek -> {
                 if(isBounded){
-                    playerService.seekPlayback()
+                    playerService.seekPlayback(5000)
                 }
             }
             R.id.temp -> {
@@ -101,11 +142,13 @@ class SplashActivity : AppCompatActivity(), View.OnClickListener {
             val binder = service as PlayerService.PlayerServiceBinder
             playerService = binder.getService()
             isBounded = true
+            subscribeObserver()
             Log.d(TAG, "onServiceConnected")
         }
 
         override fun onServiceDisconnected(arg0: ComponentName) {
             isBounded = false
+            unsubscribeObserver()
         }
     }
 }

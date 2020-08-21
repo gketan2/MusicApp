@@ -16,10 +16,10 @@
         android:theme="@style/AppTheme">
         <activity
             android:name=".ui.main.MainActivity"
-            android:label="@string/title_activity_main"/>
+            android:exported="false"/>
         <activity
             android:name=".ui.splash.SplashActivity"
-            android:label="@string/title_activity_splash">
+            android:exported="false">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

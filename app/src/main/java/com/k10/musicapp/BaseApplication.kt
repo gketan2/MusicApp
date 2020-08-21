@@ -47,11 +47,10 @@ class BaseApplication : Application() {
 
     override fun onTerminate() {
         super.onTerminate()
-        if (connectivityManager != null)
-            connectivityManager!!.unregisterNetworkCallback(networkCallback)
+        connectivityManager?.unregisterNetworkCallback(networkCallback)
         connectivityManager = null
 
-        val i = Intent(this, PlayerService::class.java)
-        stopService(i)
+        //val i = Intent(this, PlayerService::class.java)
+        //stopService(i)
     }
 }

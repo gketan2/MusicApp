@@ -1,44 +1,85 @@
 package com.k10.musicapp.services
 
 import android.media.MediaPlayer
+import android.util.Log
 import androidx.lifecycle.MediatorLiveData
+import com.k10.musicapp.datamodel.PlaybackObject
+import com.k10.musicapp.wrappers.PlaybackWrapper
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers.Default
 import kotlinx.coroutines.Dispatchers.IO
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 class MusicPlayer : MediaPlayer() {
-    companion object {
-        // currently in milliseconds change it to percentage
-        private var currentPlaybackPosition: Int = 0
-        var currentState: PlayerState = PlayerState.IDLE
-        private var orderedState: PlayerState = PlayerState.PAUSED
-        val songLength: MediatorLiveData<Int> = MediatorLiveData()
-    }
+    private val TAG = "MusicPlayer"
+
+    //currently in milliseconds change it to percentage
+    private var currentPlaybackPosition: Int = 0
+
+    //currently playing url
+    private var currentUrl: String? = null
+
+    //variables to help in state transition
+    private var currentState: PlayerState = PlayerState.IDLE
+    private var orderedState: PlayerState = PlayerState.PAUSED
+
+    //track how much it is played
+    val progress: MediatorLiveData<PlaybackWrapper<PlaybackObject>> = MediatorLiveData()
 
     init {
         setOnPreparedListener {
+            Log.d(TAG, "prepared Listener")
             currentState = PlayerState.PREPARED
-            songLength.value = duration
             if (orderedState == PlayerState.PLAYING)
                 playPlayback()
-            else if(orderedState == PlayerState.PAUSED)
-                pause()
+            else if (orderedState == PlayerState.PAUSED)
+                pausePlayback()
         }
 
-        setOnErrorListener { mp, what, extra ->
-            //handle error occurrence  then return true
+        setOnErrorListener { _, what, extra ->
+            Log.d(TAG, "error listener")
+            //handle error occurrence then return true
+            var error = ""
+            when (what) {
+                MEDIA_ERROR_UNKNOWN -> error = "Something Went Wrong..."
+                MEDIA_ERROR_SERVER_DIED -> error = "Sorry, we are having problems with our servers"
+            }
+            when (extra) {
+                MEDIA_ERROR_IO -> error = "We think it's your internet connection"
+                MEDIA_ERROR_MALFORMED -> error = "This file maybe is not for playing"
+                MEDIA_ERROR_UNSUPPORTED -> error = "Sorry, Your phone cannot play that song"
+                MEDIA_ERROR_TIMED_OUT -> error = "We think it's your internet connection"
+            }
+            progress.value = PlaybackWrapper.error(error)
             reset()
-            return@setOnErrorListener false
+            return@setOnErrorListener true
         }
 
         setOnCompletionListener {
-//            onPlaybackCompletionListener?.let{
-//                onPlaybackCompletionListener.playbackCompleted()
-//            }
+            currentState = PlayerState.PLAYBACK_COMPLETE
+            onPlaybackCompletionListener?.onPlaybackComplete()
         }
     }
 
-//    private var onPlaybackCompletionListener: PlaybackCompletionListener? = null
+    /**
+     * Interface variable to detect playback completed
+     */
+    private var onPlaybackCompletionListener: PlaybackCompleteListener? = null
+
+    /**
+     * Set playbackCompletionListener to get notified when playback completed
+     */
+    fun setOnPlaybackCompletedListener(completionListener: PlaybackCompleteListener) {
+        onPlaybackCompletionListener = completionListener
+    }
+
+    /**
+     * nulls the listener interface variable
+     */
+    private fun removeOnPlaybackCompletedListener() {
+        onPlaybackCompletionListener = null
+    }
 
     /**
      * Reset the player and starts given playback url
@@ -54,6 +95,8 @@ class MusicPlayer : MediaPlayer() {
         }
         currentPlaybackPosition = seek
         currentState = PlayerState.PREPARING
+        //Updating Live data about state
+        progress.value = PlaybackWrapper.loading()
     }
 
     /**
@@ -64,8 +107,12 @@ class MusicPlayer : MediaPlayer() {
         orderedState = PlayerState.PLAYING
         if (currentState == PlayerState.PAUSED || currentState == PlayerState.PREPARED) {
             start()
-            seekTo(currentPlaybackPosition)  //If seek is changed while in PAUSE, MediaPlayer doesn't catch seek
+            //If seek is changed while in PAUSE, MediaPlayer doesn't catch seek
+            seekTo(currentPlaybackPosition)
+            playbackUpdate()
             currentState = PlayerState.PLAYING
+            orderedState = PlayerState.NONE
+        } else if (currentState == PlayerState.PLAYING || isPlaying) {
             orderedState = PlayerState.NONE
         }
     }
@@ -78,10 +125,39 @@ class MusicPlayer : MediaPlayer() {
      */
     fun pausePlayback() {
         orderedState = PlayerState.PAUSED
-        if (isPlaying) {
-            pause()
-            currentState = PlayerState.PAUSED
-            orderedState = PlayerState.NONE
+        if (currentState <= PlayerState.PREPARING)
+            return
+
+        super.pause()
+        //Updating LiveData about the currentState
+        progress.value = PlaybackWrapper.paused()
+        currentState = PlayerState.PAUSED
+        orderedState = PlayerState.NONE
+    }
+
+    /**
+     * Updates Live Data with latest playback positions
+     * and update local variable "currentPlaybackPosition" with latest seek position
+     */
+    private fun playbackUpdate() {
+        CoroutineScope(Default).launch {
+            while (isPlaying) {
+                currentPlaybackPosition = currentPosition
+                progress.postValue(
+                    PlaybackWrapper.info(
+                        PlaybackObject(
+                            currentPosition,
+                            duration,
+                            currentPosition / 60000,
+                            (currentPosition / 1000) % 60,
+                            duration / 60000,
+                            (duration / 1000) % 60
+                        ),
+                        PlayerState.PLAYING
+                    )
+                )
+                delay(50)
+            }
         }
     }
 
@@ -90,23 +166,18 @@ class MusicPlayer : MediaPlayer() {
      */
     fun moveSeekTo(position: Int = 0) {
         currentPlaybackPosition = position
-        if(isPlaying)
+        if (isPlaying)
             seekTo(position)
-    }
-
-    fun setOnPlaybackCompleted(/*completionListener: PlaybackCompletionListener*/) {
-//        onPlaybackCompletionListener = completionListener
-//        setOnCompletionListener {
-//            //handle Playback end
-//
-//        }
     }
 
     /**
      * This method stops playback and Release resource
      * by calling MediaPlayer.reset() and MediaPlayer.release()
+     * also removes playbackCompleted listener
      */
     fun destroy() {
+        progress.value = PlaybackWrapper.none()
+        removeOnPlaybackCompletedListener()
         reset()
         super.release()
     }
@@ -116,12 +187,19 @@ class MusicPlayer : MediaPlayer() {
      * Set currentState to PlayerState.IDLE
      */
     override fun reset() {
-        super.stop()
+        if (currentState >= PlayerState.PREPARED) {
+            super.stop()
+        }
         super.reset()
         currentState = PlayerState.IDLE
-        songLength.value = 0
+        progress.value = PlaybackWrapper.idle()
     }
 }
+
+interface PlaybackCompleteListener {
+    fun onPlaybackComplete()
+}
+
 /**
  * Possible States in which MusicPlayer can be
  */
@@ -129,11 +207,11 @@ enum class PlayerState {
     NONE,
     ERROR,
     IDLE,
+    STOPPED,
     INITIALIZED,
     PREPARING,
     PREPARED,
     PLAYING,
     PAUSED,
-    STOPPED,
     PLAYBACK_COMPLETE
 }

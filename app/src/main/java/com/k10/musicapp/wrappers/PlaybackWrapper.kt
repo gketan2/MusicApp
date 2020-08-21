@@ -15,8 +15,8 @@ class PlaybackWrapper<T> {
     @Nullable
     var message: String
 
-    constructor(@NonNull Status: PlayerState, @Nullable data: T, @Nullable message: String){
-        this.status =Status
+    constructor(@NonNull Status: PlayerState, @Nullable data: T, @Nullable message: String) {
+        this.status = Status
         this.data = data
         this.message = message
     }
@@ -26,6 +26,14 @@ class PlaybackWrapper<T> {
             return PlaybackWrapper(
                 state,
                 data,
+                "success"
+            )
+        }
+
+        fun <T> paused(): PlaybackWrapper<T> {
+            return PlaybackWrapper(
+                PlayerState.PAUSED,
+                null as T,
                 "success"
             )
         }
@@ -46,11 +54,19 @@ class PlaybackWrapper<T> {
             )
         }
 
-        fun <T> empty(): PlaybackWrapper<T> {
+        fun <T> idle(): PlaybackWrapper<T> {
             return PlaybackWrapper(
                 PlayerState.IDLE,
                 null as T,
                 "loading"
+            )
+        }
+
+        fun <T> none(): PlaybackWrapper<T> {
+            return PlaybackWrapper(
+                PlayerState.NONE,
+                null as T,
+                "destroyed"
             )
         }
     }

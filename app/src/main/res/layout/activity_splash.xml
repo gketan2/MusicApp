@@ -41,16 +41,52 @@
         android:id="@+id/temp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="abcd"/>
+        android:text="abcd" />
 
     <TextView
         android:id="@+id/text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:text="TEXT"
         android:textColor="#000000"
         android:textSize="12sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/playbackElapsed"
         android:layout_width="wrap_content"
+        android:minWidth="35dp"
         android:layout_height="wrap_content"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"/>
+        android:textSize="16sp"
+        android:gravity="center"
+        android:textColor="#000000"
+        android:layout_margin="8dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@id/playbackSeekbar"
+        app:layout_constraintBottom_toBottomOf="@id/playbackSeekbar"/>
+
+    <androidx.appcompat.widget.AppCompatSeekBar
+        android:id="@+id/playbackSeekbar"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
+        android:max="1000"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/playbackTotal"
+        app:layout_constraintStart_toEndOf="@id/playbackElapsed"/>
+
+    <TextView
+        android:id="@+id/playbackTotal"
+        android:layout_width="wrap_content"
+        android:minWidth="35dp"
+        android:layout_height="wrap_content"
+        android:textSize="16sp"
+        android:gravity="center"
+        android:textColor="#000000"
+        android:layout_margin="8dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@id/playbackSeekbar"
+        app:layout_constraintBottom_toBottomOf="@id/playbackSeekbar"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -25,7 +25,9 @@ class MusicPlayer : MediaPlayer() {
     private var orderedState: PlayerState = PlayerState.PAUSED
 
     //track how much it is played
-    val progress: MediatorLiveData<PlaybackWrapper<PlaybackObject>> = MediatorLiveData()
+    val progress: MediatorLiveData<PlaybackObject> = MediatorLiveData()
+    //state of the player
+    val playerState: MediatorLiveData<PlaybackWrapper<PlaybackObject>> = MediatorLiveData()
 
     init {
         setOnPreparedListener {
@@ -51,34 +53,37 @@ class MusicPlayer : MediaPlayer() {
                 MEDIA_ERROR_UNSUPPORTED -> error = "Sorry, Your phone cannot play that song"
                 MEDIA_ERROR_TIMED_OUT -> error = "We think it's your internet connection"
             }
-            progress.value = PlaybackWrapper.error(error)
+            onMusicPlayerListener?.onPlaybackError()
+            playerState.value = PlaybackWrapper.error(error)
             reset()
             return@setOnErrorListener true
         }
 
         setOnCompletionListener {
+            Log.d(TAG, "playback completed")
             currentState = PlayerState.PLAYBACK_COMPLETE
-            onPlaybackCompletionListener?.onPlaybackComplete()
+            playerState.value = PlaybackWrapper.complete()
+            onMusicPlayerListener?.onPlaybackComplete()
         }
     }
 
     /**
      * Interface variable to detect playback completed
      */
-    private var onPlaybackCompletionListener: PlaybackCompleteListener? = null
+    private var onMusicPlayerListener: MusicPlayerListener? = null
 
     /**
      * Set playbackCompletionListener to get notified when playback completed
      */
-    fun setOnPlaybackCompletedListener(completionListener: PlaybackCompleteListener) {
-        onPlaybackCompletionListener = completionListener
+    fun setOnMusicPlayerListener(musicPlayerListener: MusicPlayerListener) {
+        onMusicPlayerListener = musicPlayerListener
     }
 
     /**
      * nulls the listener interface variable
      */
     private fun removeOnPlaybackCompletedListener() {
-        onPlaybackCompletionListener = null
+        onMusicPlayerListener = null
     }
 
     /**
@@ -87,7 +92,6 @@ class MusicPlayer : MediaPlayer() {
     fun playNewMusic(url: String, seek: Int = 0) {
         orderedState = PlayerState.PLAYING
         reset()
-        currentState = PlayerState.IDLE
         CoroutineScope(IO).launch {
             setDataSource(url)
             currentState = PlayerState.INITIALIZED
@@ -96,7 +100,7 @@ class MusicPlayer : MediaPlayer() {
         currentPlaybackPosition = seek
         currentState = PlayerState.PREPARING
         //Updating Live data about state
-        progress.value = PlaybackWrapper.loading()
+        playerState.value = PlaybackWrapper.loading()
     }
 
     /**
@@ -105,8 +109,12 @@ class MusicPlayer : MediaPlayer() {
      */
     fun playPlayback() {
         orderedState = PlayerState.PLAYING
-        if (currentState == PlayerState.PAUSED || currentState == PlayerState.PREPARED) {
+        if (currentState == PlayerState.PAUSED
+            || currentState == PlayerState.PREPARED
+            || currentState == PlayerState.PLAYBACK_COMPLETE) {
             start()
+            //Setting playerState to playing
+            playerState.value = PlaybackWrapper.playing()
             //If seek is changed while in PAUSE, MediaPlayer doesn't catch seek
             seekTo(currentPlaybackPosition)
             playbackUpdate()
@@ -130,7 +138,7 @@ class MusicPlayer : MediaPlayer() {
 
         super.pause()
         //Updating LiveData about the currentState
-        progress.value = PlaybackWrapper.paused()
+        playerState.value = PlaybackWrapper.paused()
         currentState = PlayerState.PAUSED
         orderedState = PlayerState.NONE
     }
@@ -144,7 +152,6 @@ class MusicPlayer : MediaPlayer() {
             while (isPlaying) {
                 currentPlaybackPosition = currentPosition
                 progress.postValue(
-                    PlaybackWrapper.info(
                         PlaybackObject(
                             currentPosition,
                             duration,
@@ -152,9 +159,7 @@ class MusicPlayer : MediaPlayer() {
                             (currentPosition / 1000) % 60,
                             duration / 60000,
                             (duration / 1000) % 60
-                        ),
-                        PlayerState.PLAYING
-                    )
+                        )
                 )
                 delay(50)
             }
@@ -167,7 +172,10 @@ class MusicPlayer : MediaPlayer() {
     fun moveSeekTo(position: Int = 0) {
         currentPlaybackPosition = position
         if (isPlaying)
-            seekTo(position)
+            super.seekTo(position)
+        else if (currentState == PlayerState.PLAYBACK_COMPLETE){
+            playPlayback()
+        }
     }
 
     /**
@@ -176,7 +184,7 @@ class MusicPlayer : MediaPlayer() {
      * also removes playbackCompleted listener
      */
     fun destroy() {
-        progress.value = PlaybackWrapper.none()
+        playerState.value = PlaybackWrapper.none()
         removeOnPlaybackCompletedListener()
         reset()
         super.release()
@@ -187,19 +195,26 @@ class MusicPlayer : MediaPlayer() {
      * Set currentState to PlayerState.IDLE
      */
     override fun reset() {
+        //Reset 0:00,0:00 to current seek
+        progress.value = PlaybackObject(
+            0,
+            0,
+            0,
+            0
+        )
         if (currentState >= PlayerState.PREPARED) {
             super.stop()
         }
         super.reset()
         currentState = PlayerState.IDLE
-        progress.value = PlaybackWrapper.idle()
+        playerState.value = PlaybackWrapper.idle()
     }
 }
 
-interface PlaybackCompleteListener {
+interface MusicPlayerListener {
     fun onPlaybackComplete()
+    fun onPlaybackError()
 }
-
 /**
  * Possible States in which MusicPlayer can be
  */

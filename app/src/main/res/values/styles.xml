@@ -1,10 +1,39 @@
 <resources>
     <!-- Base application theme. -->
     <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
         <!-- Customize your theme here. -->
-        <item name="colorPrimary">@color/colorPrimary</item>
-        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
-        <item name="colorAccent">@color/colorAccent</item>
+    </style>
+
+    <!-- Light Style for The App-->
+    <style name="LightTheme" parent="AppTheme">
+        <item name="colorPrimary">#000000</item>
+        <item name="colorPrimaryDark">#577FFF</item>
+        <item name="colorAccent">#6A93FF</item>
+
+        <item name="backgroundColor">#F2F9FF</item>
+        <item name="shadowColor">#ACB9D2</item>
+        <item name="lightSourceColor">#FFFFFF</item>
+        <item name="secondaryItemColor">#A1B0C9</item>
+        <item name="buttonBackground">#6A93FF</item>
+        <item name="strokeColor">#E0ECFF</item>
+
+        <item name="vectorColor">#838FA1</item>
+        <item name="textColor">#838FA1</item>
+        <item name="subTextColor">#B7C3D7</item>
+
+        <item name="highlightColor">#D3E0F5</item>
+
+        <item name="seekbarStartColor">#FFFFFF</item>
+        <item name="seekbarCenterColor">#FFFFFF</item>
+        <item name="seekbarEndColor">#6A93FF</item>
+
+        <item name="white">#FFFFFF</item>
+    </style>
+
+    <style name="NeuMorphCircularView">
+        <item name="neumorph_cornerSize">500dp</item>
     </style>
 
 </resources>

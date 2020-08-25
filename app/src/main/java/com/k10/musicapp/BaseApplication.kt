@@ -1,11 +1,13 @@
 package com.k10.musicapp
 
 import android.app.Application
+import android.content.ComponentCallbacks
 import android.content.Context
 import android.content.Intent
 import android.net.ConnectivityManager
 import android.net.ConnectivityManager.NetworkCallback
 import android.net.Network
+import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import com.k10.musicapp.services.PlayerService
 import dagger.hilt.android.HiltAndroidApp
@@ -13,6 +15,8 @@ import dagger.hilt.android.HiltAndroidApp
 
 @HiltAndroidApp
 class BaseApplication : Application() {
+    private val TAG = "BaseApplication"
+
     override fun onCreate() {
         super.onCreate()
 
@@ -45,12 +49,11 @@ class BaseApplication : Application() {
         connectivityManager?.registerDefaultNetworkCallback(networkCallback)
     }
 
+    //This function is never called
     override fun onTerminate() {
-        super.onTerminate()
+        Log.d(TAG, "onTerminate")
         connectivityManager?.unregisterNetworkCallback(networkCallback)
         connectivityManager = null
-
-        //val i = Intent(this, PlayerService::class.java)
-        //stopService(i)
+        super.onTerminate()
     }
 }

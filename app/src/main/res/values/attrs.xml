@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <attr name="backgroundColor" format="color" />
+    <attr name="shadowColor" format="color" />
+    <attr name="lightSourceColor" format="color" />
+    <attr name="secondaryItemColor" format="color" />
+    <attr name="strokeColor" format="color" />
+    <attr name="buttonBackground" format="color"/>
+    <attr name="vectorColor" format="color" />
+    <attr name="textColor" format="color" />
+    <attr name="subTextColor" format="color" />
+    <attr name="highlightColor" format="color" />
+    <attr name="seekbarStartColor" format="color" />
+    <attr name="seekbarCenterColor" format="color" />
+    <attr name="seekbarEndColor" format="color" />
+
+    <attr name="white" format="color" />
+
+</resources>

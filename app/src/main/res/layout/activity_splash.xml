@@ -4,7 +4,46 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="#EEEEEE"
     tools:context=".ui.splash.SplashActivity">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Developer Screen\nNothing works here"
+        android:textSize="24sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <soup.neumorphism.NeumorphButton
+        android:id="@+id/button"
+        android:layout_height="100dp"
+        android:layout_width="100dp"
+        app:neumorph_shadowElevation="3dp"
+        app:neumorph_shadowColorLight="#FFFFFF"
+        app:neumorph_shadowColorDark="#D1CDC7"
+
+        app:neumorph_shapeType="basin"
+
+        app:neumorph_backgroundColor="#EEEEEE"
+        app:neumorph_inset="16dp"
+        app:neumorph_insetBottom="16dp"
+
+        android:layout_margin="8dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        />
+
+    <Button
+        android:id="@+id/play"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="PLAY"
+        app:layout_constraintBottom_toTopOf="@+id/pause"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <Button
         android:id="@+id/pause"
@@ -27,21 +66,23 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/pause" />
 
-    <Button
-        android:id="@+id/play"
-        android:layout_width="wrap_content"
+    <EditText
+        android:id="@+id/seekto"
+        android:layout_width="50dp"
         android:layout_height="wrap_content"
-        android:text="PLAY"
-        app:layout_constraintBottom_toTopOf="@+id/pause"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        android:inputType="number"
+        android:text="1000"
+        app:layout_constraintStart_toEndOf="@id/seek"
+        app:layout_constraintTop_toTopOf="@id/seek" />
 
     <Button
         android:id="@+id/temp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="abcd" />
+        android:text="To The App..."
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        android:layout_margin="16dp"/>
 
     <TextView
         android:id="@+id/text"
@@ -56,15 +97,15 @@
     <TextView
         android:id="@+id/playbackElapsed"
         android:layout_width="wrap_content"
-        android:minWidth="35dp"
         android:layout_height="wrap_content"
-        android:textSize="16sp"
-        android:gravity="center"
-        android:textColor="#000000"
         android:layout_margin="8dp"
+        android:gravity="center"
+        android:minWidth="35dp"
+        android:textColor="#000000"
+        android:textSize="16sp"
+        app:layout_constraintBottom_toBottomOf="@id/playbackSeekbar"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@id/playbackSeekbar"
-        app:layout_constraintBottom_toBottomOf="@id/playbackSeekbar"/>
+        app:layout_constraintTop_toTopOf="@id/playbackSeekbar" />
 
     <androidx.appcompat.widget.AppCompatSeekBar
         android:id="@+id/playbackSeekbar"
@@ -72,21 +113,21 @@
         android:layout_height="wrap_content"
         android:layout_marginBottom="16dp"
         android:max="1000"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/seek"
         app:layout_constraintEnd_toStartOf="@id/playbackTotal"
-        app:layout_constraintStart_toEndOf="@id/playbackElapsed"/>
+        app:layout_constraintStart_toEndOf="@id/playbackElapsed" />
 
     <TextView
         android:id="@+id/playbackTotal"
         android:layout_width="wrap_content"
-        android:minWidth="35dp"
         android:layout_height="wrap_content"
-        android:textSize="16sp"
-        android:gravity="center"
-        android:textColor="#000000"
         android:layout_margin="8dp"
+        android:gravity="center"
+        android:minWidth="35dp"
+        android:textColor="#000000"
+        android:textSize="16sp"
+        app:layout_constraintBottom_toBottomOf="@id/playbackSeekbar"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="@id/playbackSeekbar"
-        app:layout_constraintBottom_toBottomOf="@id/playbackSeekbar"/>
+        app:layout_constraintTop_toTopOf="@id/playbackSeekbar" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

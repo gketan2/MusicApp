@@ -10,6 +10,7 @@ import androidx.lifecycle.MediatorLiveData
 import com.k10.musicapp.datamodel.PlaybackObject
 import com.k10.musicapp.datamodel.SongObject
 import com.k10.musicapp.utils.CommandOrigin
+import com.k10.musicapp.utils.PlayerRequestType
 import com.k10.musicapp.wrappers.PlaybackWrapper
 
 /**
@@ -18,10 +19,10 @@ import com.k10.musicapp.wrappers.PlaybackWrapper
  * -->maybe match on base of songId<--
  * need to account for matching currently playing song with ordered/next song
  */
-class PlayerService : Service(), PlaybackCompleteListener {
+class PlayerService : Service(), MusicPlayerListener {
 
     private val TAG = "PlayerService"
-    private lateinit var musicPlayer: MusicPlayer
+    private var musicPlayer: MusicPlayer? = null
     private var currentSong: SongObject? = null
     private var currentPlaylist: List<SongObject>? = null
     private var currentPlayingIndex: Int = 0
@@ -52,29 +53,83 @@ class PlayerService : Service(), PlaybackCompleteListener {
     override fun onCreate() {
         super.onCreate()
         //Initiate musicPlayer Object
+        musicPlayer?.destroy()
+        musicPlayer = null
         musicPlayer = MusicPlayer()
-        musicPlayer.setOnPlaybackCompletedListener(this)
+        musicPlayer?.setOnMusicPlayerListener(this)
         Log.d(TAG, "onCreate called")
     }
 
     override fun onDestroy() {
         super.onDestroy()
         currentSong = null
-        musicPlayer.destroy()
+        musicPlayer?.destroy()
 
         Log.d(TAG, "onDestroy called")
     }
 
-    fun makeToast() {
-        Toast.makeText(this, "$TAG Toast", Toast.LENGTH_SHORT).show()
+    fun makeToast(msg: String = "") {
+        Toast.makeText(this, "$TAG $msg", Toast.LENGTH_SHORT).show()
     }
 
-    fun getPlaybackLiveData(): MediatorLiveData<PlaybackWrapper<PlaybackObject>> {
-        return musicPlayer.progress
+    fun getCurrentSeekLiveData(): MediatorLiveData<PlaybackObject> {
+        return musicPlayer?.progress!!
+    }
+
+    fun getPlayerStateLiveData(): MediatorLiveData<PlaybackWrapper<PlaybackObject>> {
+        return musicPlayer?.playerState!!
     }
 
     fun pausePlayback() {
-        musicPlayer.pausePlayback()
+        musicPlayer?.pausePlayback()
+    }
+
+    fun requestPlayerService(what: PlayerRequestType, from: CommandOrigin) {
+        when (from) {
+            CommandOrigin.FLOATING_BAR -> {
+            }
+            CommandOrigin.PLAYER_UI -> {
+                if (what == PlayerRequestType.PLAYPAUSE) {
+                    playPausePlayback()
+                } else if (what == PlayerRequestType.NEXT) {
+                    nextPlayback()
+                } else if (what == PlayerRequestType.PREVIOUS) {
+                    previousPlayback()
+                }
+            }
+            CommandOrigin.NOTIFICATION -> {
+            }
+            CommandOrigin.LIST_UI -> {
+            }
+            CommandOrigin.PLAYLIST_UI -> {
+            }
+        }
+    }
+
+    private fun playPausePlayback() {
+        if (currentSong != null) {
+            if (musicPlayer?.isPlaying!!) {
+                musicPlayer?.pausePlayback()
+            }else{
+                musicPlayer?.playPlayback()
+            }
+        }else{
+            //TODO get this from SharedPreferences
+            val urlFromPreferences = "https://mp3d.jamendo.com/?trackid=799037&format=mp32"
+            //setting new currentSong
+            currentSong = SongObject(songStreamUrl = urlFromPreferences)
+            playThisUrl(urlFromPreferences)
+        }
+    }
+
+    private fun nextPlayback() {
+        //maybe
+        //TODO check when implementing this
+        onPlaybackComplete()
+    }
+
+    private fun previousPlayback() {
+        TODO("Not Implemented Yet")
     }
 
     fun playPlayback(from: CommandOrigin) {
@@ -88,8 +143,8 @@ class PlayerService : Service(), PlaybackCompleteListener {
                 //Get from preference if not currently started Playing
                 //Load Playlist if present
                 if (currentSong != null) {
-                    musicPlayer.playPlayback()
-                }else{
+                    musicPlayer?.playPlayback()
+                } else {
                     //TODO get this from SharedPreferences
                     val urlFromPreferences = "https://mp3d.jamendo.com/?trackid=799037&format=mp32"
                     //setting new currentSong
@@ -98,6 +153,17 @@ class PlayerService : Service(), PlaybackCompleteListener {
                 }
             }
             CommandOrigin.PLAYER_UI -> {
+                //currently same as floating_bar will change after when required
+                //maybe it will be same as floating_bar we will know as we proceed
+                if (currentSong != null) {
+                    musicPlayer?.playPlayback()
+                } else {
+                    //TODO get this from SharedPreferences
+                    val urlFromPreferences = "https://mp3d.jamendo.com/?trackid=799037&format=mp32"
+                    //setting new currentSong
+                    currentSong = SongObject(songStreamUrl = urlFromPreferences)
+                    playThisUrl(urlFromPreferences)
+                }
             }
 
             CommandOrigin.PLAYLIST_UI -> {
@@ -106,15 +172,16 @@ class PlayerService : Service(), PlaybackCompleteListener {
             }
         }
         if (currentSong != null)
-            musicPlayer.playPlayback()
+            musicPlayer?.playPlayback()
     }
 
     fun seekPlayback(seekTo: Int = 0) {
-        musicPlayer.moveSeekTo(seekTo)
+        musicPlayer?.moveSeekTo(seekTo)
     }
 
     fun playThisUrl(uri: String, seek: Int = 0) {
-        musicPlayer.playNewMusic(uri, seek)
+        musicPlayer?.playNewMusic(uri, seek)
+        //TODO store this song in Preference
     }
 
     override fun onPlaybackComplete() {
@@ -130,5 +197,9 @@ class PlayerService : Service(), PlaybackCompleteListener {
 //                playThisSong(currentSong!!.songStreamUrl)
 //            }
 //        }
+    }
+
+    override fun onPlaybackError() {
+        currentSong = null
     }
 }

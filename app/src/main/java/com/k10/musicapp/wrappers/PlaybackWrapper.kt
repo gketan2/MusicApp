@@ -30,11 +30,27 @@ class PlaybackWrapper<T> {
             )
         }
 
+        fun <T> playing(): PlaybackWrapper<T> {
+            return PlaybackWrapper(
+                PlayerState.PLAYING,
+                null as T,
+                "success"
+            )
+        }
+
         fun <T> paused(): PlaybackWrapper<T> {
             return PlaybackWrapper(
                 PlayerState.PAUSED,
                 null as T,
                 "success"
+            )
+        }
+
+        fun <T> complete(): PlaybackWrapper<T> {
+            return PlaybackWrapper(
+                PlayerState.PLAYBACK_COMPLETE,
+                null as T,
+            "complete"
             )
         }
 

@@ -15,7 +15,7 @@ import soup.neumorphism.NeumorphImageButton
 class CustomAnimation {
     companion object {
         fun rotateAroundCentre(animationDuration: Long): RotateAnimation {
-            val animation: RotateAnimation = RotateAnimation(
+            val animation = RotateAnimation(
                 0f,
                 360f,
                 Animation.RELATIVE_TO_SELF,
@@ -54,5 +54,29 @@ class CustomAnimation {
                 }
             }
         }
+//
+//        fun neumorphPressedAnimation(view: View) {
+//            if (view is NeumorphImageButton) {
+//                CoroutineScope(Default).launch {
+//                    withContext(Main) {
+//                        view.setShapeType(1)
+//                    }
+//                    delay(100)
+//                    withContext(Main) {
+//                        view.setShapeType(0)
+//                    }
+//                }
+//            } else if (view is NeumorphButton) {
+//                CoroutineScope(Default).launch {
+//                    withContext(Main) {
+//                        view.setShapeType(1)
+//                    }
+//                    delay(100)
+//                    withContext(Main) {
+//                        view.setShapeType(0)
+//                    }
+//                }
+//            }
+//        }
     }
 }

@@ -167,12 +167,16 @@ class MusicPlayer : MediaPlayer() {
     }
 
     /**
-     * Move seek of currently Playing/Preparing Song
+     * Move seek of currently Playing/Preparing Song.
+     * Provide in the range of 0 - 1000, like perThousand
      */
     fun moveSeekTo(position: Int = 0) {
-        currentPlaybackPosition = position
+        if(position !in 0..1000){
+            return
+        }
+        currentPlaybackPosition = position * (duration/1000)
         if (isPlaying)
-            super.seekTo(position)
+            super.seekTo(currentPlaybackPosition)
         else if (currentState == PlayerState.PLAYBACK_COMPLETE){
             playPlayback()
         }
@@ -208,6 +212,7 @@ class MusicPlayer : MediaPlayer() {
         super.reset()
         currentState = PlayerState.IDLE
         playerState.value = PlaybackWrapper.idle()
+        currentPlaybackPosition = 0
     }
 }
 

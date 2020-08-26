@@ -9,6 +9,7 @@ import android.os.IBinder
 import android.util.Log
 import android.view.MotionEvent
 import android.view.View
+import android.widget.SeekBar
 import android.widget.Toast
 import androidx.core.content.ContextCompat
 import com.k10.musicapp.R
@@ -20,7 +21,6 @@ import com.k10.musicapp.utils.CommandOrigin
 import com.k10.musicapp.utils.PlayerRequestType
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.android.synthetic.main.activity_player.*
-import soup.neumorphism.NeumorphButton
 import soup.neumorphism.NeumorphImageButton
 
 @AndroidEntryPoint
@@ -43,7 +43,7 @@ class PlayerActivity : BaseActivity(), View.OnClickListener {
         playerService?.let {
             //Observing MusicPlayer State
             it.getPlayerStateLiveData().observe(this, { wrapper ->
-                if(wrapper.status != PlayerState.PLAYING)
+                if (wrapper.status != PlayerState.PLAYING)
                     playerSongPoster.clearAnimation()
                 when (wrapper.status) {
                     PlayerState.NONE -> {
@@ -117,6 +117,7 @@ class PlayerActivity : BaseActivity(), View.OnClickListener {
         playerPrevious.setOnClickListener(this)
         playerPlayPause.setOnClickListener(this)
 
+        playerSeekBar.setOnSeekBarChangeListener(onSeekBarChangeListener)
         playerPlayPause.setOnTouchListener(onTouchListener)
         playerPrevious.setOnTouchListener(onTouchListener)
         playerNext.setOnTouchListener(onTouchListener)
@@ -170,11 +171,31 @@ class PlayerActivity : BaseActivity(), View.OnClickListener {
         }
     }
 
+    //SeekBarChangeListener to listen when user has changed the SeekBar position
+    private val onSeekBarChangeListener = object : SeekBar.OnSeekBarChangeListener {
+        var position = 0
+        override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+            if (fromUser) {
+                position = progress
+            }
+        }
+
+        override fun onStartTrackingTouch(seekBar: SeekBar?) {
+        }
+
+        override fun onStopTrackingTouch(seekBar: SeekBar?) {
+            if(isBounded){
+                Log.d(TAG, "onStopTrackingTouch: $position")
+                playerService?.seekPlaybackTo(position)
+            }
+        }
+    }
+
     //OnTouchListener for Play/Pause,Next,Previous NeumorphImageButton
     //Used to Implement Pressed-Animation
     private val onTouchListener = View.OnTouchListener { v, event ->
-        event?.let{
-            if(it.action == MotionEvent.ACTION_DOWN) {
+        event?.let {
+            if (it.action == MotionEvent.ACTION_DOWN) {
                 (v as NeumorphImageButton).setShapeType(1)
             } else if (it.action == MotionEvent.ACTION_UP) {
                 (v as NeumorphImageButton).setShapeType(0)

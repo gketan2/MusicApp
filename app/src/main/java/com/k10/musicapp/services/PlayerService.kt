@@ -4,7 +4,6 @@ import android.app.Service
 import android.content.Intent
 import android.os.Binder
 import android.os.IBinder
-import android.util.Log
 import android.widget.Toast
 import androidx.lifecycle.MediatorLiveData
 import com.k10.musicapp.datamodel.PlaybackObject
@@ -38,15 +37,31 @@ class PlayerService : Service(), MusicPlayerListener {
         }
     }
 
+    /**
+     * Broadcast Receiver for notification Buttons
+     */
+//    inner class NotificationBroadCastReceiver : BroadcastReceiver() {
+//        override fun onReceive(context: Context?, intent: Intent?) {
+//            intent?.let {
+//                val action = it.action
+//                if (action.equals(BroadcastIntents.PLAY_PAUSE, true)) {
+//                    requestPlayerService(PlayerRequestType.PLAYPAUSE, CommandOrigin.NOTIFICATION)
+//                } else if (action.equals(BroadcastIntents.NEXT, true)) {
+//                    requestPlayerService(PlayerRequestType.NEXT, CommandOrigin.NOTIFICATION)
+//                } else if (action.equals(BroadcastIntents.PREVIOUS, true)) {
+//                    requestPlayerService(PlayerRequestType.PREVIOUS, CommandOrigin.NOTIFICATION)
+//                }
+//            }
+//        }
+//    }
+
     private val binder = PlayerServiceBinder()
 
     override fun onBind(intent: Intent?): IBinder? {
-        Log.d(TAG, "onBind called")
         return binder
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        Log.d(TAG, "onStartCommand called")
         return super.onStartCommand(intent, flags, startId)
     }
 
@@ -57,15 +72,12 @@ class PlayerService : Service(), MusicPlayerListener {
         musicPlayer = null
         musicPlayer = MusicPlayer()
         musicPlayer?.setOnMusicPlayerListener(this)
-        Log.d(TAG, "onCreate called")
     }
 
     override fun onDestroy() {
         super.onDestroy()
         currentSong = null
         musicPlayer?.destroy()
-
-        Log.d(TAG, "onDestroy called")
     }
 
     fun makeToast(msg: String = "") {
@@ -80,10 +92,14 @@ class PlayerService : Service(), MusicPlayerListener {
         return musicPlayer?.playerState!!
     }
 
-    fun pausePlayback() {
-        musicPlayer?.pausePlayback()
-    }
-
+    /**
+     * Handle(entry point) any music player related commands like play, pause, next, previous
+     *
+     * @param what what type of function need to be run.
+     * This parameter can only be from {@link PlayerRequestState}
+     * @param from from where this is called, for e.g. Notification bar or player ui or clicked on list of song.
+     * See {@link CommandOrigin}
+     */
     fun requestPlayerService(what: PlayerRequestType, from: CommandOrigin) {
         when (from) {
             CommandOrigin.FLOATING_BAR -> {
@@ -110,10 +126,10 @@ class PlayerService : Service(), MusicPlayerListener {
         if (currentSong != null) {
             if (musicPlayer?.isPlaying!!) {
                 musicPlayer?.pausePlayback()
-            }else{
+            } else {
                 musicPlayer?.playPlayback()
             }
-        }else{
+        } else {
             //TODO get this from SharedPreferences
             val urlFromPreferences = "https://mp3d.jamendo.com/?trackid=799037&format=mp32"
             //setting new currentSong
@@ -132,50 +148,53 @@ class PlayerService : Service(), MusicPlayerListener {
         TODO("Not Implemented Yet")
     }
 
-    fun playPlayback(from: CommandOrigin) {
-        when (from) {
-            CommandOrigin.NOTIFICATION -> {
-                //maybe easiest to handle
-                //should call this from broadcast receiver
-                //make Broadcast Receiver
-            }
-            CommandOrigin.FLOATING_BAR -> {
-                //Get from preference if not currently started Playing
-                //Load Playlist if present
-                if (currentSong != null) {
-                    musicPlayer?.playPlayback()
-                } else {
-                    //TODO get this from SharedPreferences
-                    val urlFromPreferences = "https://mp3d.jamendo.com/?trackid=799037&format=mp32"
-                    //setting new currentSong
-                    currentSong = SongObject(songStreamUrl = urlFromPreferences)
-                    playThisUrl(urlFromPreferences)
-                }
-            }
-            CommandOrigin.PLAYER_UI -> {
-                //currently same as floating_bar will change after when required
-                //maybe it will be same as floating_bar we will know as we proceed
-                if (currentSong != null) {
-                    musicPlayer?.playPlayback()
-                } else {
-                    //TODO get this from SharedPreferences
-                    val urlFromPreferences = "https://mp3d.jamendo.com/?trackid=799037&format=mp32"
-                    //setting new currentSong
-                    currentSong = SongObject(songStreamUrl = urlFromPreferences)
-                    playThisUrl(urlFromPreferences)
-                }
-            }
+//    fun playPlayback(from: CommandOrigin) {
+//        when (from) {
+//            CommandOrigin.NOTIFICATION -> {
+//                //maybe easiest to handle
+//                //should call this from broadcast receiver
+//                //make Broadcast Receiver
+//            }
+//            CommandOrigin.FLOATING_BAR -> {
+//                //Get from preference if not currently started Playing
+//                //Load Playlist if present
+//                if (currentSong != null) {
+//                    musicPlayer?.playPlayback()
+//                } else {
+//                    //TODO get this from SharedPreferences
+//                    val urlFromPreferences = "https://mp3d.jamendo.com/?trackid=799037&format=mp32"
+//                    //setting new currentSong
+//                    currentSong = SongObject(songStreamUrl = urlFromPreferences)
+//                    playThisUrl(urlFromPreferences)
+//                }
+//            }
+//            CommandOrigin.PLAYER_UI -> {
+//                //currently same as floating_bar will change after when required
+//                //maybe it will be same as floating_bar we will know as we proceed
+//                if (currentSong != null) {
+//                    musicPlayer?.playPlayback()
+//                } else {
+//                    //TODO get this from SharedPreferences
+//                    val urlFromPreferences = "https://mp3d.jamendo.com/?trackid=799037&format=mp32"
+//                    //setting new currentSong
+//                    currentSong = SongObject(songStreamUrl = urlFromPreferences)
+//                    playThisUrl(urlFromPreferences)
+//                }
+//            }
+//
+//            CommandOrigin.PLAYLIST_UI -> {
+//            }
+//            CommandOrigin.LIST_UI -> {
+//            }
+//        }
+//        if (currentSong != null)
+//            musicPlayer?.playPlayback()
+//    }
 
-            CommandOrigin.PLAYLIST_UI -> {
-            }
-            CommandOrigin.LIST_UI -> {
-            }
-        }
-        if (currentSong != null)
-            musicPlayer?.playPlayback()
-    }
-
-    fun seekPlayback(seekTo: Int = 0) {
+    /**
+     * provide seek  in the rage  0 - 1000, like perThousand
+     */
+    fun seekPlaybackTo(seekTo: Int = 0) {
         musicPlayer?.moveSeekTo(seekTo)
     }
 

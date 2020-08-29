@@ -47,6 +47,12 @@ class PlayerActivity : BaseActivity(), View.OnClickListener {
                     playerSongPoster.clearAnimation()
                 when (wrapper.status) {
                     PlayerState.NONE -> {
+                        playerPlayPause.setImageDrawable(
+                            ContextCompat.getDrawable(
+                                this,
+                                R.drawable.ic_play
+                            )
+                        )
                     }
                     PlayerState.ERROR -> {
                         playerPlayPause.setImageDrawable(
@@ -55,11 +61,23 @@ class PlayerActivity : BaseActivity(), View.OnClickListener {
                                 R.drawable.ic_play
                             )
                         )
-                        Toast.makeText(this, wrapper.message, Toast.LENGTH_SHORT).show()
+//                        Toast.makeText(this, wrapper.message, Toast.LENGTH_SHORT).show()
                     }
                     PlayerState.IDLE -> {
+                        playerPlayPause.setImageDrawable(
+                            ContextCompat.getDrawable(
+                                this,
+                                R.drawable.ic_play
+                            )
+                        )
                     }
                     PlayerState.INITIALIZED -> {
+                        playerPlayPause.setImageDrawable(
+                            ContextCompat.getDrawable(
+                                this,
+                                R.drawable.ic_play
+                            )
+                        )
                     }
                     PlayerState.PREPARING -> {
                         playerPlayPause.setImageDrawable(
@@ -70,7 +88,6 @@ class PlayerActivity : BaseActivity(), View.OnClickListener {
                         )
                     }
                     PlayerState.PREPARED -> {
-
                     }
                     PlayerState.PLAYING -> {
                         playerSongPoster.startAnimation(CustomAnimation.rotateAroundCentre(15000))
@@ -90,8 +107,20 @@ class PlayerActivity : BaseActivity(), View.OnClickListener {
                         )
                     }
                     PlayerState.STOPPED -> {
+                        playerPlayPause.setImageDrawable(
+                            ContextCompat.getDrawable(
+                                this,
+                                R.drawable.ic_play
+                            )
+                        )
                     }
                     PlayerState.PLAYBACK_COMPLETE -> {
+                        playerPlayPause.setImageDrawable(
+                            ContextCompat.getDrawable(
+                                this,
+                                R.drawable.ic_play
+                            )
+                        )
                     }
                 }
             })

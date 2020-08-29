@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="?attr/backgroundColor">
+
+    <TextView
+        android:id="@+id/notificationSongName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="8dp"
+        android:text="Song Name"
+
+        android:textColor="#000000"
+        android:textSize="16sp" />
+
+    <TextView
+        android:id="@+id/notificationSinger"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:text="Singer Name"
+
+        android:textColor="#222222"
+        android:textSize="12sp" />
+
+<!--    <ImageButton-->
+<!--        android:id="@+id/notificationPrevious"-->
+<!--        android:layout_width="wrap_content"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:layout_margin="8dp"-->
+<!--        android:layout_gravity="center"-->
+<!--        android:backgroundTint="#00FFFFFF"-->
+<!--        android:src="@drawable/ic_fast_rewind" />-->
+
+<!--    <ImageButton-->
+<!--        android:id="@+id/notificationPlayPause"-->
+<!--        android:layout_width="wrap_content"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:layout_marginTop="8dp"-->
+
+<!--        android:layout_gravity="center"-->
+<!--        android:backgroundTint="#00FFFFFF"-->
+
+<!--        android:src="@drawable/ic_pause" />-->
+
+<!--    <ImageButton-->
+<!--        android:id="@+id/notificationNext"-->
+<!--        android:layout_width="wrap_content"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:layout_margin="8dp"-->
+
+<!--        android:layout_gravity="center"-->
+<!--        android:backgroundTint="#00FFFFFF"-->
+
+<!--        android:src="@drawable/ic_fast_forward" />-->
+
+
+<!--    <ImageView-->
+<!--        android:id="@+id/notificationPoster"-->
+<!--        android:layout_width="120dp"-->
+<!--        android:layout_height="120dp"-->
+<!--        android:layout_marginStart="8dp"-->
+<!--        android:layout_alignParentEnd="true"-->
+
+<!--        android:layout_centerVertical="true"-->
+<!--        android:layout_margin="8dp" />-->
+
+</LinearLayout>

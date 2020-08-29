@@ -21,11 +21,12 @@ class MusicPlayer : MediaPlayer() {
     private var currentUrl: String? = null
 
     //variables to help in state transition
-    private var currentState: PlayerState = PlayerState.IDLE
-    private var orderedState: PlayerState = PlayerState.PAUSED
+    var currentState: Int = PlayerState.IDLE
+    private var orderedState: Int = PlayerState.PAUSED
 
     //track how much it is played
     val progress: MediatorLiveData<PlaybackObject> = MediatorLiveData()
+
     //state of the player
     val playerState: MediatorLiveData<PlaybackWrapper<PlaybackObject>> = MediatorLiveData()
 
@@ -35,8 +36,10 @@ class MusicPlayer : MediaPlayer() {
             currentState = PlayerState.PREPARED
             if (orderedState == PlayerState.PLAYING)
                 playPlayback()
-            else if (orderedState == PlayerState.PAUSED)
-                pausePlayback()
+            //No need to pause if it is not even started
+            //it will cause error if you do
+            //else if (orderedState == PlayerState.PAUSED)
+            //pausePlayback()
         }
 
         setOnErrorListener { _, what, extra ->
@@ -53,6 +56,8 @@ class MusicPlayer : MediaPlayer() {
                 MEDIA_ERROR_UNSUPPORTED -> error = "Sorry, Your phone cannot play that song"
                 MEDIA_ERROR_TIMED_OUT -> error = "We think it's your internet connection"
             }
+            if (error.isBlank())
+                error = "$what : $extra"
             onMusicPlayerListener?.onPlaybackError()
             playerState.value = PlaybackWrapper.error(error)
             reset()
@@ -111,11 +116,14 @@ class MusicPlayer : MediaPlayer() {
         orderedState = PlayerState.PLAYING
         if (currentState == PlayerState.PAUSED
             || currentState == PlayerState.PREPARED
-            || currentState == PlayerState.PLAYBACK_COMPLETE) {
+            || currentState == PlayerState.PLAYBACK_COMPLETE
+        ) {
             start()
             //Setting playerState to playing
             playerState.value = PlaybackWrapper.playing()
             //If seek is changed while in PAUSE, MediaPlayer doesn't catch seek
+            if(currentState == PlayerState.PLAYBACK_COMPLETE)
+                currentPlaybackPosition = 0
             seekTo(currentPlaybackPosition)
             playbackUpdate()
             currentState = PlayerState.PLAYING
@@ -152,14 +160,14 @@ class MusicPlayer : MediaPlayer() {
             while (isPlaying) {
                 currentPlaybackPosition = currentPosition
                 progress.postValue(
-                        PlaybackObject(
-                            currentPosition,
-                            duration,
-                            currentPosition / 60000,
-                            (currentPosition / 1000) % 60,
-                            duration / 60000,
-                            (duration / 1000) % 60
-                        )
+                    PlaybackObject(
+                        currentPosition,
+                        duration,
+                        currentPosition / 60000,
+                        (currentPosition / 1000) % 60,
+                        duration / 60000,
+                        (duration / 1000) % 60
+                    )
                 )
                 delay(50)
             }
@@ -170,16 +178,23 @@ class MusicPlayer : MediaPlayer() {
      * Move seek of currently Playing/Preparing Song.
      * Provide in the range of 0 - 1000, like perThousand
      */
-    fun moveSeekTo(position: Int = 0) {
-        if(position !in 0..1000){
-            return
+    fun moveSeekTo(position: Int) {
+        if (currentState >= PlayerState.PREPARED) {
+            currentPlaybackPosition = thousandToDuration(position)
+            if (isPlaying)
+                super.seekTo(currentPlaybackPosition)
+            else if (currentState == PlayerState.PLAYBACK_COMPLETE)
+                playPlayback()
+        }else{
+            currentPlaybackPosition = position
         }
-        currentPlaybackPosition = position * (duration/1000)
-        if (isPlaying)
-            super.seekTo(currentPlaybackPosition)
-        else if (currentState == PlayerState.PLAYBACK_COMPLETE){
-            playPlayback()
+    }
+
+    private fun thousandToDuration(position: Int): Int {
+        if (position !in 0..1000) {
+            return 0
         }
+        return position * (duration / 1000)
     }
 
     /**
@@ -220,18 +235,21 @@ interface MusicPlayerListener {
     fun onPlaybackComplete()
     fun onPlaybackError()
 }
+
 /**
  * Possible States in which MusicPlayer can be
  */
-enum class PlayerState {
-    NONE,
-    ERROR,
-    IDLE,
-    STOPPED,
-    INITIALIZED,
-    PREPARING,
-    PREPARED,
-    PLAYING,
-    PAUSED,
-    PLAYBACK_COMPLETE
+class PlayerState {
+    companion object {
+        const val NONE = 0
+        const val ERROR = 1
+        const val IDLE = 2
+        const val STOPPED = 3
+        const val INITIALIZED = 4
+        const val PREPARING = 5
+        const val PREPARED = 6
+        const val PLAYING = 7
+        const val PAUSED = 8
+        const val PLAYBACK_COMPLETE = 9
+    }
 }

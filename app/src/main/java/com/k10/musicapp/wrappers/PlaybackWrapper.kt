@@ -7,7 +7,7 @@ import com.k10.musicapp.services.PlayerState
 class PlaybackWrapper<T> {
 
     @Nullable
-    var status: PlayerState
+    var status: Int
 
     @Nullable
     var data: T
@@ -15,14 +15,14 @@ class PlaybackWrapper<T> {
     @Nullable
     var message: String
 
-    constructor(@NonNull Status: PlayerState, @Nullable data: T, @Nullable message: String) {
+    constructor(@NonNull Status: Int, @Nullable data: T, @Nullable message: String) {
         this.status = Status
         this.data = data
         this.message = message
     }
 
     companion object {
-        fun <T> info(data: T, state: PlayerState): PlaybackWrapper<T> {
+        fun <T> info(data: T, state: Int): PlaybackWrapper<T> {
             return PlaybackWrapper(
                 state,
                 data,

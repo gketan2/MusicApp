@@ -56,24 +56,15 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <Button
-        android:id="@+id/seek"
+        android:id="@+id/broadcast"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Seek to Zero"
+        android:text="BroadCast"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.501"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/pause" />
-
-    <EditText
-        android:id="@+id/seekto"
-        android:layout_width="50dp"
-        android:layout_height="wrap_content"
-        android:inputType="number"
-        android:text="1000"
-        app:layout_constraintStart_toEndOf="@id/seek"
-        app:layout_constraintTop_toTopOf="@id/seek" />
 
     <Button
         android:id="@+id/temp"
@@ -93,41 +84,5 @@
         android:textSize="12sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
-
-    <TextView
-        android:id="@+id/playbackElapsed"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_margin="8dp"
-        android:gravity="center"
-        android:minWidth="35dp"
-        android:textColor="#000000"
-        android:textSize="16sp"
-        app:layout_constraintBottom_toBottomOf="@id/playbackSeekbar"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@id/playbackSeekbar" />
-
-    <androidx.appcompat.widget.AppCompatSeekBar
-        android:id="@+id/playbackSeekbar"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="16dp"
-        android:max="1000"
-        app:layout_constraintTop_toBottomOf="@id/seek"
-        app:layout_constraintEnd_toStartOf="@id/playbackTotal"
-        app:layout_constraintStart_toEndOf="@id/playbackElapsed" />
-
-    <TextView
-        android:id="@+id/playbackTotal"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_margin="8dp"
-        android:gravity="center"
-        android:minWidth="35dp"
-        android:textColor="#000000"
-        android:textSize="16sp"
-        app:layout_constraintBottom_toBottomOf="@id/playbackSeekbar"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="@id/playbackSeekbar" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

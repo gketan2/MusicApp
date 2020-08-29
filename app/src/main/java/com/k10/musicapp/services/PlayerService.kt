@@ -1,14 +1,25 @@
 package com.k10.musicapp.services
 
 import android.app.Service
+import android.content.Context
 import android.content.Intent
+import android.media.AudioAttributes
+import android.media.AudioFocusRequest
+import android.media.AudioManager
 import android.os.Binder
+import android.os.Build
 import android.os.IBinder
+import android.telephony.PhoneStateListener
+import android.telephony.TelephonyManager
+import android.util.Log
 import android.widget.Toast
+import androidx.annotation.RequiresApi
 import androidx.lifecycle.MediatorLiveData
 import com.k10.musicapp.datamodel.PlaybackObject
 import com.k10.musicapp.datamodel.SongObject
+import com.k10.musicapp.notification.CustomNotification
 import com.k10.musicapp.utils.CommandOrigin
+import com.k10.musicapp.utils.Constants
 import com.k10.musicapp.utils.PlayerRequestType
 import com.k10.musicapp.wrappers.PlaybackWrapper
 
@@ -18,7 +29,7 @@ import com.k10.musicapp.wrappers.PlaybackWrapper
  * -->maybe match on base of songId<--
  * need to account for matching currently playing song with ordered/next song
  */
-class PlayerService : Service(), MusicPlayerListener {
+class PlayerService : Service(), MusicPlayerListener, AudioManager.OnAudioFocusChangeListener {
 
     private val TAG = "PlayerService"
     private var musicPlayer: MusicPlayer? = null
@@ -27,6 +38,10 @@ class PlayerService : Service(), MusicPlayerListener {
     private var currentPlayingIndex: Int = 0
 
     private var onRepeat: Boolean = false
+
+    private var audioManager: AudioManager? = null
+
+    private var telephonyManager: TelephonyManager? = null
 
     /**
      * General Binder Class to contact from a view component.
@@ -37,24 +52,6 @@ class PlayerService : Service(), MusicPlayerListener {
         }
     }
 
-    /**
-     * Broadcast Receiver for notification Buttons
-     */
-//    inner class NotificationBroadCastReceiver : BroadcastReceiver() {
-//        override fun onReceive(context: Context?, intent: Intent?) {
-//            intent?.let {
-//                val action = it.action
-//                if (action.equals(BroadcastIntents.PLAY_PAUSE, true)) {
-//                    requestPlayerService(PlayerRequestType.PLAYPAUSE, CommandOrigin.NOTIFICATION)
-//                } else if (action.equals(BroadcastIntents.NEXT, true)) {
-//                    requestPlayerService(PlayerRequestType.NEXT, CommandOrigin.NOTIFICATION)
-//                } else if (action.equals(BroadcastIntents.PREVIOUS, true)) {
-//                    requestPlayerService(PlayerRequestType.PREVIOUS, CommandOrigin.NOTIFICATION)
-//                }
-//            }
-//        }
-//    }
-
     private val binder = PlayerServiceBinder()
 
     override fun onBind(intent: Intent?): IBinder? {
@@ -62,22 +59,41 @@ class PlayerService : Service(), MusicPlayerListener {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        intent?.let {
+            Log.d(TAG, "onStartCommand: intent: ${it.action}")
+            when (it.action) {
+                Constants.PLAY_PAUSE -> {
+                    requestPlayerService(PlayerRequestType.PLAYPAUSE, CommandOrigin.NOTIFICATION)
+                }
+                Constants.NEXT -> {
+                    requestPlayerService(PlayerRequestType.NEXT, CommandOrigin.NOTIFICATION)
+                }
+                Constants.PREVIOUS -> {
+                    requestPlayerService(PlayerRequestType.PREVIOUS, CommandOrigin.NOTIFICATION)
+                }
+            }
+        }
         return super.onStartCommand(intent, flags, startId)
     }
 
     override fun onCreate() {
         super.onCreate()
+
         //Initiate musicPlayer Object
         musicPlayer?.destroy()
         musicPlayer = null
         musicPlayer = MusicPlayer()
         musicPlayer?.setOnMusicPlayerListener(this)
+
+        registerPhoneStateListener()
     }
 
     override fun onDestroy() {
         super.onDestroy()
         currentSong = null
         musicPlayer?.destroy()
+        removeAudioFocus()
+        removeTelephonyListener()
     }
 
     fun makeToast(msg: String = "") {
@@ -103,17 +119,26 @@ class PlayerService : Service(), MusicPlayerListener {
     fun requestPlayerService(what: PlayerRequestType, from: CommandOrigin) {
         when (from) {
             CommandOrigin.FLOATING_BAR -> {
+                if (what == PlayerRequestType.PLAYPAUSE)
+                    playPausePlayback()
             }
             CommandOrigin.PLAYER_UI -> {
-                if (what == PlayerRequestType.PLAYPAUSE) {
-                    playPausePlayback()
-                } else if (what == PlayerRequestType.NEXT) {
-                    nextPlayback()
-                } else if (what == PlayerRequestType.PREVIOUS) {
-                    previousPlayback()
+                when (what) {
+                    PlayerRequestType.PLAYPAUSE -> playPausePlayback()
+                    PlayerRequestType.NEXT -> nextPlayback()
+                    PlayerRequestType.PREVIOUS -> previousPlayback()
+                    else -> {
+                    }
                 }
             }
             CommandOrigin.NOTIFICATION -> {
+                when (what) {
+                    PlayerRequestType.PLAYPAUSE -> playPausePlayback()
+                    PlayerRequestType.NEXT -> nextPlayback()
+                    PlayerRequestType.PREVIOUS -> previousPlayback()
+                    else -> {
+                    }
+                }
             }
             CommandOrigin.LIST_UI -> {
             }
@@ -124,10 +149,11 @@ class PlayerService : Service(), MusicPlayerListener {
 
     private fun playPausePlayback() {
         if (currentSong != null) {
-            if (musicPlayer?.isPlaying!!) {
-                musicPlayer?.pausePlayback()
+            if (musicPlayer?.isPlaying!! || musicPlayer?.currentState!! <= PlayerState.PREPARING) {
+                pausePlayback()
+                stopForeground(false)
             } else {
-                musicPlayer?.playPlayback()
+                playPlayback()
             }
         } else {
             //TODO get this from SharedPreferences
@@ -138,6 +164,29 @@ class PlayerService : Service(), MusicPlayerListener {
         }
     }
 
+    /**
+     * Play the mediaPLayer,
+     * doesnt care about the current state of the MusicPlayer/MediaPlayer
+     */
+    private fun playPlayback() {
+        if (requestAudioFocus()) {
+            musicPlayer?.playPlayback()
+            //show notification
+            updateNotification(false)
+        }
+    }
+
+    /**
+     * Pause the mediaPLayer,
+     * doesnt care about the current state of the MusicPlayer/MediaPlayer
+     * (therefore may produce error)
+     * */
+    private fun pausePlayback() {
+        musicPlayer?.pausePlayback()
+        updateNotification(true)
+        stopForeground(false)
+    }
+
     private fun nextPlayback() {
         //maybe
         //TODO check when implementing this
@@ -145,51 +194,8 @@ class PlayerService : Service(), MusicPlayerListener {
     }
 
     private fun previousPlayback() {
-        TODO("Not Implemented Yet")
+        //TODO("Not Implemented Yet")
     }
-
-//    fun playPlayback(from: CommandOrigin) {
-//        when (from) {
-//            CommandOrigin.NOTIFICATION -> {
-//                //maybe easiest to handle
-//                //should call this from broadcast receiver
-//                //make Broadcast Receiver
-//            }
-//            CommandOrigin.FLOATING_BAR -> {
-//                //Get from preference if not currently started Playing
-//                //Load Playlist if present
-//                if (currentSong != null) {
-//                    musicPlayer?.playPlayback()
-//                } else {
-//                    //TODO get this from SharedPreferences
-//                    val urlFromPreferences = "https://mp3d.jamendo.com/?trackid=799037&format=mp32"
-//                    //setting new currentSong
-//                    currentSong = SongObject(songStreamUrl = urlFromPreferences)
-//                    playThisUrl(urlFromPreferences)
-//                }
-//            }
-//            CommandOrigin.PLAYER_UI -> {
-//                //currently same as floating_bar will change after when required
-//                //maybe it will be same as floating_bar we will know as we proceed
-//                if (currentSong != null) {
-//                    musicPlayer?.playPlayback()
-//                } else {
-//                    //TODO get this from SharedPreferences
-//                    val urlFromPreferences = "https://mp3d.jamendo.com/?trackid=799037&format=mp32"
-//                    //setting new currentSong
-//                    currentSong = SongObject(songStreamUrl = urlFromPreferences)
-//                    playThisUrl(urlFromPreferences)
-//                }
-//            }
-//
-//            CommandOrigin.PLAYLIST_UI -> {
-//            }
-//            CommandOrigin.LIST_UI -> {
-//            }
-//        }
-//        if (currentSong != null)
-//            musicPlayer?.playPlayback()
-//    }
 
     /**
      * provide seek  in the rage  0 - 1000, like perThousand
@@ -198,14 +204,21 @@ class PlayerService : Service(), MusicPlayerListener {
         musicPlayer?.moveSeekTo(seekTo)
     }
 
-    fun playThisUrl(uri: String, seek: Int = 0) {
+    private fun playThisUrl(uri: String, seek: Int = 0) {
+        requestAudioFocus()
         musicPlayer?.playNewMusic(uri, seek)
         //TODO store this song in Preference
+        if (currentSong != null)
+            updateNotification(false)
     }
 
     override fun onPlaybackComplete() {
         //TODO Play next song
         //maybe something like this
+
+        //if no next song is present
+        updateNotification(true)
+        stopForeground(false)
 
 //        if (currentPlaylist != null) {
 //            if (currentPlaylist!!.size > currentSong!!.songIndexInList + 1) {
@@ -220,5 +233,122 @@ class PlayerService : Service(), MusicPlayerListener {
 
     override fun onPlaybackError() {
         currentSong = null
+        CustomNotification.removeNotification(applicationContext)
+    }
+
+    private fun updateNotification(showPlay: Boolean) {
+        if (currentSong == null) {
+            Log.d(TAG, "updateNotification: Could not update notification")
+            return
+        }
+
+        Log.d(TAG, "updateNotification: updating Notification")
+        startForeground(
+            CustomNotification.NOTIFICATION_ID,
+            CustomNotification.returnNotification(
+                applicationContext,
+                currentSong!!,
+                packageName,
+                showPlay
+            )
+        )
+    }
+
+    /**
+     * Listen if other app tries to play music,
+     * then pause the music playback.
+     */
+    override fun onAudioFocusChange(focusChange: Int) {
+        Log.d(TAG, "onAudioFocusChange: $focusChange")
+        when (focusChange) {
+            AudioManager.AUDIOFOCUS_GAIN -> {
+                if (musicPlayer?.isPlaying!! || musicPlayer?.currentState!! <= PlayerState.PREPARING) {
+                    playPlayback()
+                    musicPlayer?.setVolume(1f, 1f)
+                }
+            }
+            AudioManager.AUDIOFOCUS_LOSS -> {
+                pausePlayback()
+            }
+            AudioManager.AUDIOFOCUS_LOSS_TRANSIENT -> {
+                pausePlayback()
+            }
+            AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK -> {
+                musicPlayer?.setVolume(0.1f, 0.1f)
+            }
+        }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private val audioFocusRequest: AudioFocusRequest =
+        AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN)
+            .setAudioAttributes(
+                AudioAttributes.Builder()
+                    .setUsage(AudioAttributes.USAGE_MEDIA)
+                    .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                    .build()
+            ).setOnAudioFocusChangeListener(this)
+            .build()
+
+    /**
+     * If any other app is playing audio it will be paused.
+     * return true, if other app is paused, now play your audio,
+     * if returned false, other app is not leaving focus, do not play
+     */
+    private fun requestAudioFocus(): Boolean {
+        audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
+        var result = true
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            return audioManager?.requestAudioFocus(audioFocusRequest) == AudioManager.AUDIOFOCUS_REQUEST_GRANTED
+        }
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+            return audioManager?.requestAudioFocus(
+                this,
+                AudioManager.STREAM_MUSIC,
+                AudioManager.AUDIOFOCUS_GAIN
+            ) == AudioManager.AUDIOFOCUS_REQUEST_GRANTED
+        }
+        Log.d(TAG, "requestAudioFocus: not returned")
+        return true
+    }
+
+    private fun removeAudioFocus(): Boolean {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            return AudioManager.AUDIOFOCUS_REQUEST_GRANTED ==
+                    audioManager?.abandonAudioFocusRequest(audioFocusRequest)
+        }
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+            audioManager?.abandonAudioFocus(this)
+        }
+
+        Log.d(TAG, "removeAudioFocus: not returned")
+        return true
+    }
+
+    /**
+     * Listener for Phone Call
+     */
+    private val phoneStateListener: PhoneStateListener = object : PhoneStateListener() {
+        override fun onCallStateChanged(state: Int, phoneNumber: String?) {
+            when (state) {
+                TelephonyManager.CALL_STATE_OFFHOOK -> {
+                }
+                TelephonyManager.CALL_STATE_RINGING -> {
+                    if (musicPlayer?.currentState!! > PlayerState.PREPARING)
+                        pausePlayback()
+                }
+                TelephonyManager.CALL_STATE_IDLE -> {
+                }
+            }
+        }
+    }
+
+    private fun registerPhoneStateListener() {
+        telephonyManager = getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
+        telephonyManager?.listen(phoneStateListener, PhoneStateListener.LISTEN_CALL_STATE)
+    }
+
+    private fun removeTelephonyListener() {
+        telephonyManager = null
     }
 }

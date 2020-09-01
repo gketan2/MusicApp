@@ -10,6 +10,7 @@ import com.k10.musicapp.BaseApplication
 import com.k10.musicapp.R
 import com.k10.musicapp.broadcast.CustomBroadcastReceiver
 import com.k10.musicapp.ui.BaseActivity
+import com.k10.musicapp.ui.main.MainActivity
 import com.k10.musicapp.ui.player.PlayerActivity
 import com.k10.musicapp.utils.Constants
 import dagger.hilt.android.AndroidEntryPoint
@@ -41,6 +42,8 @@ class SplashActivity : BaseActivity(), View.OnClickListener {
     override fun onClick(v: View?) {
         when (v?.id) {
             R.id.play -> {
+                val i = Intent(this, MainActivity::class.java)
+                startActivity(i)
             }
             R.id.pause -> {
             }

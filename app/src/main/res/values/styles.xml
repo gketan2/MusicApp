@@ -4,6 +4,8 @@
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
         <!-- Customize your theme here. -->
+
+        <item name="gradientRadius">500dp</item>
     </style>
 
     <!-- Light Style for The App-->
@@ -12,22 +14,55 @@
         <item name="colorPrimaryDark">#577FFF</item>
         <item name="colorAccent">#6A93FF</item>
 
-        <item name="backgroundColor">#F2F9FF</item>
+        <item name="backgroundStartColor">#F2F9FF</item>
+        <item name="backgroundCenterColor">#FFFFFF</item>
+        <item name="backgroundEndColor">#F2F9FF</item>
+
+        <item name="buttonBackground">#f9ffff</item>
         <item name="shadowColor">#ACB9D2</item>
         <item name="lightSourceColor">#FFFFFF</item>
+
         <item name="secondaryItemColor">#A1B0C9</item>
-        <item name="buttonBackground">#6A93FF</item>
         <item name="strokeColor">#E0ECFF</item>
 
-        <item name="vectorColor">#838FA1</item>
+        <item name="vectorColor">#A1B0C9</item>
+
         <item name="textColor">#838FA1</item>
         <item name="subTextColor">#B7C3D7</item>
 
         <item name="highlightColor">#D3E0F5</item>
 
-        <item name="seekbarStartColor">#FFFFFF</item>
-        <item name="seekbarCenterColor">#FFFFFF</item>
-        <item name="seekbarEndColor">#6A93FF</item>
+        <item name="seekbarThumbColor">#6A93FF</item>
+
+        <item name="white">#FFFFFF</item>
+    </style>
+
+    <!-- Dark Style for The App-->
+    <style name="DarkTheme" parent="AppTheme">
+        <item name="colorPrimary">#000000</item>
+        <item name="colorPrimaryDark">#26272B</item>
+        <item name="colorAccent">#FF6445</item>
+
+        <item name="backgroundStartColor">#34393E</item>
+        <item name="backgroundCenterColor">#25292D</item>
+        <item name="backgroundEndColor">#34393E</item>
+
+        <item name="buttonBackground">#272B30</item>
+        <item name="shadowColor">#17181A</item>
+        <item name="lightSourceColor">#353B42</item>
+
+        <item name="secondaryItemColor">#A1B0C9</item>
+
+        <item name="strokeColor">#1F2327</item>
+
+        <item name="vectorColor">#FFFFFF</item>
+
+        <item name="textColor">#FFFFFF</item>
+        <item name="subTextColor">#FFFFFF</item>
+
+        <item name="highlightColor">#17181C</item>
+
+        <item name="seekbarThumbColor">#FFFF00</item>
 
         <item name="white">#FFFFFF</item>
     </style>

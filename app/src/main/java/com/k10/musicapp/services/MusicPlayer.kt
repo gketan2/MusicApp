@@ -14,7 +14,7 @@ import kotlinx.coroutines.launch
 class MusicPlayer : MediaPlayer() {
     private val TAG = "MusicPlayer"
 
-    //currently in milliseconds change it to percentage
+    //playback in milliseconds
     private var currentPlaybackPosition: Int = 0
 
     //currently playing url
@@ -22,7 +22,7 @@ class MusicPlayer : MediaPlayer() {
 
     //variables to help in state transition
     var currentState: Int = PlayerState.IDLE
-    private var orderedState: Int = PlayerState.PAUSED
+    var orderedState: Int = PlayerState.PAUSED
 
     //track how much it is played
     val progress: MediatorLiveData<PlaybackObject> = MediatorLiveData()
@@ -141,12 +141,12 @@ class MusicPlayer : MediaPlayer() {
      */
     fun pausePlayback() {
         orderedState = PlayerState.PAUSED
+        //Updating LiveData about the currentState
+        playerState.value = PlaybackWrapper.paused()
         if (currentState <= PlayerState.PREPARING)
             return
 
         super.pause()
-        //Updating LiveData about the currentState
-        playerState.value = PlaybackWrapper.paused()
         currentState = PlayerState.PAUSED
         orderedState = PlayerState.NONE
     }
@@ -195,6 +195,10 @@ class MusicPlayer : MediaPlayer() {
             return 0
         }
         return position * (duration / 1000)
+    }
+
+    fun getCurrentPlaybackPosition(): Int{
+        return currentPlaybackPosition
     }
 
     /**

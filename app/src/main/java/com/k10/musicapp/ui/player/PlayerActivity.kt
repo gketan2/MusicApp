@@ -12,11 +12,14 @@ import android.view.View
 import android.widget.SeekBar
 import android.widget.Toast
 import androidx.core.content.ContextCompat
+import com.bumptech.glide.Glide
+import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.k10.musicapp.R
 import com.k10.musicapp.helper.CustomAnimation
 import com.k10.musicapp.services.PlayerService
 import com.k10.musicapp.services.PlayerState
 import com.k10.musicapp.ui.BaseActivity
+import com.k10.musicapp.ui.main.MainActivity
 import com.k10.musicapp.utils.CommandOrigin
 import com.k10.musicapp.utils.PlayerRequestType
 import dagger.hilt.android.AndroidEntryPoint
@@ -61,7 +64,7 @@ class PlayerActivity : BaseActivity(), View.OnClickListener {
                                 R.drawable.ic_play
                             )
                         )
-//                        Toast.makeText(this, wrapper.message, Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this, wrapper.message, Toast.LENGTH_SHORT).show()
                     }
                     PlayerState.IDLE -> {
                         playerPlayPause.setImageDrawable(
@@ -132,6 +135,16 @@ class PlayerActivity : BaseActivity(), View.OnClickListener {
                 playerSeekBar.progress =
                     pO.playedMilli * 1000 / (pO.durationMilli + 1)//+1 -> to handle durationmilli == 0
             })
+
+            //observing current song data
+            it.getCurrentSongObject().observe(this, { song ->
+                playerSongName.text = song.songName
+                playerSongArtist.text = song.singer
+                Glide.with(this)
+                    .load(song.songPosterUrl)
+                    .diskCacheStrategy(DiskCacheStrategy.DATA)
+                    .into(playerSongPoster)
+            })
         }
     }
 
@@ -165,6 +178,16 @@ class PlayerActivity : BaseActivity(), View.OnClickListener {
         unbindService(connection)
         isBounded = false
         Log.d(TAG, "onStop: unbinding service")
+    }
+
+    override fun onBackPressed() {
+        if(isTaskRoot){
+            val i = Intent(this, MainActivity::class.java)
+            startActivity(i)
+            finish()
+        }else{
+            super.onBackPressed()
+        }
     }
 
     override fun onClick(v: View?) {
@@ -213,7 +236,7 @@ class PlayerActivity : BaseActivity(), View.OnClickListener {
         }
 
         override fun onStopTrackingTouch(seekBar: SeekBar?) {
-            if(isBounded){
+            if (isBounded) {
                 Log.d(TAG, "onStopTrackingTouch: $position")
                 playerService?.seekPlaybackTo(position)
             }

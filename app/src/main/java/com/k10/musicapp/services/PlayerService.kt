@@ -12,16 +12,21 @@ import android.os.IBinder
 import android.telephony.PhoneStateListener
 import android.telephony.TelephonyManager
 import android.util.Log
-import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.MediatorLiveData
 import com.k10.musicapp.datamodel.PlaybackObject
 import com.k10.musicapp.datamodel.SongObject
 import com.k10.musicapp.notification.CustomNotification
+import com.k10.musicapp.storge.Preference
 import com.k10.musicapp.utils.CommandOrigin
 import com.k10.musicapp.utils.Constants
 import com.k10.musicapp.utils.PlayerRequestType
 import com.k10.musicapp.wrappers.PlaybackWrapper
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 /**
  * TODO HANDLE PLAYLIST
@@ -29,12 +34,15 @@ import com.k10.musicapp.wrappers.PlaybackWrapper
  * -->maybe match on base of songId<--
  * need to account for matching currently playing song with ordered/next song
  */
+@AndroidEntryPoint
 class PlayerService : Service(), MusicPlayerListener, AudioManager.OnAudioFocusChangeListener {
 
     private val TAG = "PlayerService"
     private var musicPlayer: MusicPlayer? = null
     private var currentSong: SongObject? = null
-    private var currentPlaylist: List<SongObject>? = null
+    private var currentSongLiveData: MediatorLiveData<SongObject> = MediatorLiveData()
+
+    private var currentPlaylist: ArrayList<SongObject>? = ArrayList()
     private var currentPlayingIndex: Int = 0
 
     private var onRepeat: Boolean = false
@@ -42,6 +50,9 @@ class PlayerService : Service(), MusicPlayerListener, AudioManager.OnAudioFocusC
     private var audioManager: AudioManager? = null
 
     private var telephonyManager: TelephonyManager? = null
+
+    @Inject
+    lateinit var preference: Preference
 
     /**
      * General Binder Class to contact from a view component.
@@ -85,19 +96,33 @@ class PlayerService : Service(), MusicPlayerListener, AudioManager.OnAudioFocusC
         musicPlayer = MusicPlayer()
         musicPlayer?.setOnMusicPlayerListener(this)
 
+        currentSong = preference.getLastPlayingSong()
+        if (currentSong != null) {
+            Log.d(TAG, "onCreate: got song from preference")
+            currentSongLiveData.value = currentSong!!
+            playThisSong(currentSong!!)
+            pausePlayback()
+        }
+
         registerPhoneStateListener()
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        currentSong = null
+        //storing last played in preference
+        if (currentSong != null) {
+            CoroutineScope(Dispatchers.Default).launch {
+                preference.setLastPlaying(currentSong!!)
+                currentSong = null
+            }
+        }
         musicPlayer?.destroy()
         removeAudioFocus()
         removeTelephonyListener()
     }
 
-    fun makeToast(msg: String = "") {
-        Toast.makeText(this, "$TAG $msg", Toast.LENGTH_SHORT).show()
+    fun getCurrentSongObject(): MediatorLiveData<SongObject> {
+        return currentSongLiveData
     }
 
     fun getCurrentSeekLiveData(): MediatorLiveData<PlaybackObject> {
@@ -117,6 +142,7 @@ class PlayerService : Service(), MusicPlayerListener, AudioManager.OnAudioFocusC
      * See {@link CommandOrigin}
      */
     fun requestPlayerService(what: PlayerRequestType, from: CommandOrigin) {
+        Log.d(TAG, "requestPlayerService: $what  $from")
         when (from) {
             CommandOrigin.FLOATING_BAR -> {
                 if (what == PlayerRequestType.PLAYPAUSE)
@@ -149,18 +175,23 @@ class PlayerService : Service(), MusicPlayerListener, AudioManager.OnAudioFocusC
 
     private fun playPausePlayback() {
         if (currentSong != null) {
-            if (musicPlayer?.isPlaying!! || musicPlayer?.currentState!! <= PlayerState.PREPARING) {
+            if (musicPlayer?.currentState!! == PlayerState.PLAYING
+                || musicPlayer?.orderedState == PlayerState.PLAYING) {
                 pausePlayback()
-                stopForeground(false)
-            } else {
+            } else if (musicPlayer?.currentState!! == PlayerState.PAUSED
+                || musicPlayer?.orderedState == PlayerState.PAUSED
+                || musicPlayer?.currentState!! < PlayerState.PREPARING
+            ) {
                 playPlayback()
             }
         } else {
-            //TODO get this from SharedPreferences
+            Log.d(TAG, "playPausePlayback: creating fake object since null from preference")
+            //TODO REMOVE THIS WHEN (can play from other Sources, like a list of song or search result) IMPLEMENTED
             val urlFromPreferences = "https://mp3d.jamendo.com/?trackid=799037&format=mp32"
             //setting new currentSong
             currentSong = SongObject(songStreamUrl = urlFromPreferences)
-            playThisUrl(urlFromPreferences)
+            currentSongLiveData.value = currentSong!!
+            playThisSong(currentSong!!)
         }
     }
 
@@ -173,6 +204,8 @@ class PlayerService : Service(), MusicPlayerListener, AudioManager.OnAudioFocusC
             musicPlayer?.playPlayback()
             //show notification
             updateNotification(false)
+        } else {
+            Log.d(TAG, "playPlayback: audioRequestFailed")
         }
     }
 
@@ -185,6 +218,12 @@ class PlayerService : Service(), MusicPlayerListener, AudioManager.OnAudioFocusC
         musicPlayer?.pausePlayback()
         updateNotification(true)
         stopForeground(false)
+        if (currentSong != null) {
+            currentSong?.storedPlaybackSeek = musicPlayer?.getCurrentPlaybackPosition()!!
+            CoroutineScope(Dispatchers.Default).launch {
+                preference.setLastPlaying(currentSong!!)
+            }
+        }
     }
 
     private fun nextPlayback() {
@@ -204,31 +243,44 @@ class PlayerService : Service(), MusicPlayerListener, AudioManager.OnAudioFocusC
         musicPlayer?.moveSeekTo(seekTo)
     }
 
+    /**
+     * wrapper of playThisUrl(uri, seek), just to store song in lastPlaying in sharedPreference
+     */
+    private fun playThisSong(songObject: SongObject) {
+        //Storing current playing song to lastPlaying song in preference
+        CoroutineScope(Dispatchers.Default).launch {
+            preference.setLastPlaying(currentSong!!)
+        }
+        playThisUrl(songObject.songStreamUrl, songObject.storedPlaybackSeek)
+    }
+
+    /**
+     * Should only be called from playThisSong(SongObject)
+     */
     private fun playThisUrl(uri: String, seek: Int = 0) {
         requestAudioFocus()
         musicPlayer?.playNewMusic(uri, seek)
-        //TODO store this song in Preference
         if (currentSong != null)
             updateNotification(false)
     }
 
     override fun onPlaybackComplete() {
-        //TODO Play next song
-        //maybe something like this
-
-        //if no next song is present
-        updateNotification(true)
-        stopForeground(false)
-
-//        if (currentPlaylist != null) {
-//            if (currentPlaylist!!.size > currentSong!!.songIndexInList + 1) {
-//                currentSong = currentPlaylist!![currentSong!!.songIndexInList + 1]
-//                playThisSong(currentSong!!.songStreamUrl)
-//            } else if (onRepeat) {
-//                currentSong = currentPlaylist!![0]
-//                playThisSong(currentSong!!.songStreamUrl)
-//            }
-//        }
+        //Stops if no song is in the list,
+        //then the playback stops.
+        if (currentPlaylist != null) {
+            if (currentPlaylist?.size!! > 0) {
+                currentPlayingIndex = (currentPlayingIndex + 1) % currentPlaylist?.size!!
+                currentSong = currentPlaylist!![currentPlayingIndex]
+                currentSongLiveData.value = currentSong!!
+                playThisSong(currentSong!!)
+            } else {
+                updateNotification(true)
+                stopForeground(false)
+            }
+        } else {
+            updateNotification(true)
+            stopForeground(false)
+        }
     }
 
     override fun onPlaybackError() {
@@ -248,7 +300,6 @@ class PlayerService : Service(), MusicPlayerListener, AudioManager.OnAudioFocusC
             CustomNotification.returnNotification(
                 applicationContext,
                 currentSong!!,
-                packageName,
                 showPlay
             )
         )
@@ -264,7 +315,7 @@ class PlayerService : Service(), MusicPlayerListener, AudioManager.OnAudioFocusC
             AudioManager.AUDIOFOCUS_GAIN -> {
                 if (musicPlayer?.isPlaying!! || musicPlayer?.currentState!! <= PlayerState.PREPARING) {
                     playPlayback()
-                    musicPlayer?.setVolume(1f, 1f)
+                    musicPlayer?.setVolume(0.2f, 0.2f)
                 }
             }
             AudioManager.AUDIOFOCUS_LOSS -> {
@@ -297,7 +348,6 @@ class PlayerService : Service(), MusicPlayerListener, AudioManager.OnAudioFocusC
      */
     private fun requestAudioFocus(): Boolean {
         audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
-        var result = true
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             return audioManager?.requestAudioFocus(audioFocusRequest) == AudioManager.AUDIOFOCUS_REQUEST_GRANTED
         }

@@ -2,21 +2,10 @@
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
     <item>
         <shape android:shape="oval">
-            <solid android:color="?attr/strokeColor" />
-            <size
-                android:width="24dp"
-                android:height="24dp" />
-        </shape>
-    </item>
-    <item android:left="1dp"
-        android:right="1dp"
-        android:top="1dp"
-        android:bottom="1dp">
-        <shape android:shape="oval">
             <stroke
-                android:color="?attr/backgroundColor"
-                android:width="5dp" />
-            <solid android:color="?attr/buttonBackground" />
+                android:color="?attr/strokeColor"
+                android:width="8dp" />
+            <solid android:color="?attr/seekbarThumbColor" />
             <size
                 android:width="24dp"
                 android:height="24dp" />

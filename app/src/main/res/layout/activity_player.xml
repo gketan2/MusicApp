@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="?attr/backgroundColor"
+    android:background="@drawable/background_gradient"
     tools:context=".ui.player.PlayerActivity">
 
     <soup.neumorphism.NeumorphImageButton
@@ -15,8 +15,9 @@
 
         app:neumorph_shadowColorLight="?attr/lightSourceColor"
         app:neumorph_shadowColorDark="?attr/shadowColor"
+        app:neumorph_backgroundColor="?attr/buttonBackground"
         app:neumorph_strokeColor="?attr/strokeColor"
-        app:neumorph_strokeWidth="1dp"
+        app:neumorph_strokeWidth="2dp"
 
         android:src="@drawable/ic_arrow_back"
         android:scaleType="centerInside"
@@ -41,21 +42,24 @@
 
     <soup.neumorphism.NeumorphCardView
         android:id="@+id/playerPosterWrapper"
-        android:layout_height="300dp"
-        android:layout_width="300dp"
-        android:layout_marginTop="100dp"
+        android:layout_height="0dp"
+        android:layout_width="0dp"
+        app:layout_constraintHeight_max="300dp"
+        app:layout_constraintWidth_max="300dp"
+        app:layout_constraintDimensionRatio="1"
 
         app:neumorph_shadowElevation="8dp"
         app:neumorph_shadowColorLight="?attr/lightSourceColor"
         app:neumorph_shadowColorDark="?attr/shadowColor"
         app:neumorph_strokeColor="?attr/strokeColor"
-        app:neumorph_strokeWidth="5dp"
+        app:neumorph_strokeWidth="8dp"
         app:neumorph_shapeType="flat"
         app:neumorph_shapeAppearance="@style/NeuMorphCircularView"
 
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        app:layout_constraintTop_toBottomOf="@id/playerBackButton"
+        app:layout_constraintBottom_toTopOf="@id/playerSongName">
 
         <de.hdodenhof.circleimageview.CircleImageView
             android:id="@+id/playerSongPoster"
@@ -72,11 +76,11 @@
         android:layout_marginTop="8dp"
 
         android:text="Song Name"
-        android:textSize="16sp"
+        android:textSize="20sp"
         android:textColor="?attr/textColor"
         android:textStyle="bold"
 
-        app:layout_constraintTop_toBottomOf="@id/playerPosterWrapper"
+        app:layout_constraintBottom_toTopOf="@id/playerSongArtist"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
@@ -84,12 +88,13 @@
         android:id="@+id/playerSongArtist"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
 
         android:text="Singer Name"
         android:textSize="16sp"
         android:textColor="?attr/subTextColor"
 
-        app:layout_constraintTop_toBottomOf="@id/playerSongName"
+        app:layout_constraintBottom_toTopOf="@id/playerCurrentSeek"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
@@ -126,6 +131,7 @@
         android:layout_marginBottom="24dp"
 
         android:thumb="@drawable/seekbar_thumb"
+
         android:max="1000"
 
         app:layout_constraintStart_toStartOf="parent"
@@ -140,9 +146,9 @@
         app:neumorph_shadowElevation="5dp"
         app:neumorph_shadowColorLight="?attr/lightSourceColor"
         app:neumorph_shadowColorDark="?attr/shadowColor"
-        app:neumorph_backgroundColor="?attr/backgroundColor"
+        app:neumorph_backgroundColor="?attr/buttonBackground"
         app:neumorph_strokeColor="?attr/strokeColor"
-        app:neumorph_strokeWidth="1dp"
+        app:neumorph_strokeWidth="2dp"
         app:neumorph_shapeAppearance="@style/NeuMorphCircularView"
 
         android:src="@drawable/ic_fast_rewind"
@@ -159,11 +165,12 @@
         android:layout_height="100dp"
         android:layout_marginBottom="24dp"
 
-        app:neumorph_shadowElevation="8dp"
+        app:neumorph_shadowElevation="5dp"
         app:neumorph_shadowColorLight="?attr/lightSourceColor"
         app:neumorph_shadowColorDark="?attr/shadowColor"
+        app:neumorph_backgroundColor="?attr/buttonBackground"
         app:neumorph_strokeColor="?attr/strokeColor"
-        app:neumorph_strokeWidth="1dp"
+        app:neumorph_strokeWidth="2dp"
         app:neumorph_shapeType="flat"
         app:neumorph_shapeAppearance="@style/NeuMorphCircularView"
 
@@ -182,9 +189,9 @@
         app:neumorph_shadowElevation="5dp"
         app:neumorph_shadowColorLight="?attr/lightSourceColor"
         app:neumorph_shadowColorDark="?attr/shadowColor"
-        app:neumorph_backgroundColor="?attr/backgroundColor"
+        app:neumorph_backgroundColor="?attr/buttonBackground"
         app:neumorph_strokeColor="?attr/strokeColor"
-        app:neumorph_strokeWidth="1dp"
+        app:neumorph_strokeWidth="2dp"
         app:neumorph_shapeAppearance="@style/NeuMorphCircularView"
 
         android:src="@drawable/ic_fast_forward"

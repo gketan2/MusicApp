@@ -10,13 +10,12 @@ import androidx.core.app.NotificationCompat
 import com.k10.musicapp.R
 import com.k10.musicapp.datamodel.SongObject
 import com.k10.musicapp.services.PlayerService
-import com.k10.musicapp.ui.splash.SplashActivity
+import com.k10.musicapp.ui.player.PlayerActivity
 import com.k10.musicapp.utils.Constants
 
 class CustomNotification {
 
     companion object {
-        private const val TAG = "NotificationBuilder"
         private const val CHANNEL_ID = "MusicApp_Channel"
         const val NOTIFICATION_ID = 1
 
@@ -29,7 +28,6 @@ class CustomNotification {
         fun returnNotification(
             context: Context,
             songObject: SongObject,
-            packageName: String,
             showPlay: Boolean
         ): Notification {
 
@@ -42,7 +40,7 @@ class CustomNotification {
             val previousIntent = Intent(context, PlayerService::class.java)
             previousIntent.action = Constants.PREVIOUS
 
-            val clickIntent = Intent(context, SplashActivity::class.java)
+            val clickIntent = Intent(context, PlayerActivity::class.java)
 
             val p0 = PendingIntent.getService(context, 100, playPauseIntent, FLAG_UPDATE_CURRENT)
             val p1 = PendingIntent.getService(context, 101, nextIntent, FLAG_UPDATE_CURRENT)

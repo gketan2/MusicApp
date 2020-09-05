@@ -16,3 +16,5 @@ Currently NO sophisticated Music Streaming API is present. Hence Stopping this f
 Handle Play/Pause from notification(By using Pending Intent).</br>
 Save Currently Playing Song in SharedPreference so that next time user can replay that song from the last position.</br>
 Play Song From List of Song(Currently fake since no good server found)</br>
+Change Theme (Dark/ Light)</br>
+UI using Neumorphism design provided by [fornewid](https://github.com/fornewid/neumorphism).</br>

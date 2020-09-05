@@ -19,6 +19,20 @@ class AppModule {
         return app.applicationContext
     }
 
+    @Theme
+    @Provides
+    @Singleton
+    fun themePreference(context: Context): SharedPreferences {
+        return context.getSharedPreferences("theme", Context.MODE_PRIVATE)
+    }
+
+    @Theme
+    @Provides
+    @Singleton
+    fun themePreferenceEditor(context: Context): SharedPreferences.Editor {
+        return context.getSharedPreferences("theme", Context.MODE_PRIVATE).edit()
+    }
+
     @LastPlayedSong
     @Provides
     @Singleton

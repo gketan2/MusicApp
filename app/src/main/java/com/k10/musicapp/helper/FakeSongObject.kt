@@ -14,7 +14,7 @@ class FakeSongObject {
             return songObject
         }
 
-        fun getSongList(): List<SongObject> {
+        fun getSongList(): ArrayList<SongObject> {
             val list: ArrayList<SongObject> = ArrayList()
             for (i in 0..9) {
                 list.add(
@@ -22,7 +22,8 @@ class FakeSongObject {
                         "id$i",
                         "Song_$i",
                         "Singer_$i",
-                        songUrl[i]
+                        songUrl[i],
+                        posterUrl[i]
                     )
                 )
             }

@@ -32,7 +32,10 @@
 
         <item name="highlightColor">#D3E0F5</item>
 
-        <item name="seekbarThumbColor">#6A93FF</item>
+        <item name="seekbarRemainingColor">#D9E4F5</item>
+        <item name="seekbarThumbColor">#9EB9FF</item>
+        <item name="seekbarProgressStartColor">#779DFF</item>
+        <item name="seekbarProgressEndColor">#9EB9FF</item>
 
         <item name="white">#FFFFFF</item>
     </style>
@@ -62,7 +65,10 @@
 
         <item name="highlightColor">#17181C</item>
 
-        <item name="seekbarThumbColor">#FFFF00</item>
+        <item name="seekbarRemainingColor">#000000</item>
+        <item name="seekbarThumbColor">#C0952D</item>
+        <item name="seekbarProgressStartColor">#D03808</item>
+        <item name="seekbarProgressEndColor">#C0952D</item>
 
         <item name="white">#FFFFFF</item>
     </style>

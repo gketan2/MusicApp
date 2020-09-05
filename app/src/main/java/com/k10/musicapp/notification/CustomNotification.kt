@@ -1,22 +1,26 @@
 package com.k10.musicapp.notification
 
 import android.app.Notification
+import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.PendingIntent.FLAG_UPDATE_CURRENT
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import androidx.core.app.NotificationCompat
+import androidx.core.content.ContextCompat.getSystemService
 import com.k10.musicapp.R
 import com.k10.musicapp.datamodel.SongObject
 import com.k10.musicapp.services.PlayerService
 import com.k10.musicapp.ui.player.PlayerActivity
 import com.k10.musicapp.utils.Constants
 
+
 class CustomNotification {
 
     companion object {
-        private const val CHANNEL_ID = "MusicApp_Channel"
+        private const val CHANNEL_ID = "MusicApp_ChannelID"
         const val NOTIFICATION_ID = 1
 
         fun removeNotification(context: Context) {
@@ -61,10 +65,22 @@ class CustomNotification {
 
             notificationBuilder
                 .setShowWhen(false)
+                .setOnlyAlertOnce(true)
                 .setContentTitle(songObject.songName)
                 .setContentText(songObject.singer)
                 .setContentIntent(p3)
                 .setStyle(NotificationCompat.DecoratedCustomViewStyle())
+
+            // Since android Oreo notification channel is needed.
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+                val channel = NotificationChannel(
+                    CHANNEL_ID,
+                    "MusicApp Channel",
+                    NotificationManager.IMPORTANCE_LOW
+                )
+                notificationManager.createNotificationChannel(channel)
+            }
 
             return notificationBuilder.build()
         }

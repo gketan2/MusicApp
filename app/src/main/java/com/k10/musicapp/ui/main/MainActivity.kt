@@ -1,5 +1,6 @@
 package com.k10.musicapp.ui.main
 
+import android.app.Dialog
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
@@ -8,19 +9,24 @@ import android.os.Bundle
 import android.os.IBinder
 import android.util.Log
 import android.view.View
+import android.view.ViewGroup
+import android.widget.RadioButton
 import android.widget.Toast
-import com.google.android.material.bottomnavigation.BottomNavigationView
+import androidx.appcompat.widget.PopupMenu
 import androidx.core.content.ContextCompat
 import androidx.navigation.findNavController
 import androidx.navigation.ui.setupWithNavController
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.engine.DiskCacheStrategy
+import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.k10.musicapp.R
 import com.k10.musicapp.services.PlayerService
 import com.k10.musicapp.services.PlayerState
 import com.k10.musicapp.ui.BaseActivity
 import com.k10.musicapp.ui.player.PlayerActivity
 import com.k10.musicapp.utils.CommandOrigin
+import com.k10.musicapp.utils.Constants.Companion.THEME_DARK
+import com.k10.musicapp.utils.Constants.Companion.THEME_LIGHT
 import com.k10.musicapp.utils.PlayerRequestType
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.android.synthetic.main.activity_main.*
@@ -45,17 +51,23 @@ class MainActivity : BaseActivity(), View.OnClickListener {
 
         floatingPlayPause.setOnClickListener(this)
         floatingBar.setOnClickListener(this)
+        mainActivityMore.setOnClickListener(this)
     }
 
     fun subscribeObserver() {
         playerService?.let {
             //observing for song/singer name and poster
-            it.getCurrentSongObject().observe(this, {song ->
-                floatingSongInfo.text = "${song.songName}-${song.singer}"
-                Glide.with(this)
-                    .load(song.songPosterUrl)
-                    .diskCacheStrategy(DiskCacheStrategy.DATA)
-                    .into(floatingImageView)
+            it.getCurrentSongObject().observe(this, { song ->
+                if (song != null) {
+                    floatingBar.visibility = View.VISIBLE
+                    floatingSongInfo.text = "${song.songName}-${song.singer}"
+                    Glide.with(this)
+                        .load(song.songPosterUrl)
+                        .diskCacheStrategy(DiskCacheStrategy.DATA)
+                        .into(floatingImageView)
+                } else {
+                    floatingBar.visibility = View.GONE
+                }
             })
             //observing current state for playpause button
             it.getPlayerStateLiveData().observe(this, { wrapper ->
@@ -162,15 +174,80 @@ class MainActivity : BaseActivity(), View.OnClickListener {
     override fun onClick(v: View?) {
         when (v!!.id) {
             R.id.floatingPlayPause -> {
-                if(isBounded){
-                    playerService?.requestPlayerService(PlayerRequestType.PLAYPAUSE, CommandOrigin.FLOATING_BAR)
+                if (isBounded) {
+                    playerService?.requestPlayerService(
+                        PlayerRequestType.PLAYPAUSE,
+                        CommandOrigin.FLOATING_BAR
+                    )
                 }
             }
             R.id.floatingBar -> {
                 val i = Intent(this, PlayerActivity::class.java)
                 startActivity(i)
             }
+            R.id.mainActivityMore -> {
+                changeThemePopUp()
+            }
         }
+    }
+
+    private fun changeThemePopUp() {
+        val popup = PopupMenu(this, mainActivityMore)
+        //inflating menu from xml resource
+        popup.inflate(R.menu.more_menu)
+        popup.setOnMenuItemClickListener {
+            when (it.itemId) {
+                R.id.theme -> {
+                    changeTheme()
+                }
+
+            }
+            return@setOnMenuItemClickListener true
+        }
+        popup.show();
+    }
+
+    private fun changeTheme() {
+        val dialog = Dialog(this)
+        dialog.setContentView(R.layout.dialog_theme)
+
+        val lightTheme: RadioButton = dialog.findViewById(R.id.dialogLightTheme)
+        val darkTheme: RadioButton = dialog.findViewById(R.id.dialogDarkTheme)
+
+        val currentTheme = getCurrentTheme()
+        if (currentTheme == THEME_LIGHT) {
+            lightTheme.isChecked = true
+        } else {
+            darkTheme.isChecked = true
+        }
+
+        lightTheme.setOnClickListener {
+            if (currentTheme != THEME_LIGHT) {
+                setCurrentTheme(THEME_LIGHT)
+                dialog.dismiss()
+                val i = Intent(this, MainActivity::class.java)
+                startActivity(i)
+                finish()
+                overridePendingTransition(0, 0)
+            }
+        }
+
+        darkTheme.setOnClickListener {
+            if (currentTheme != THEME_DARK) {
+                setCurrentTheme(THEME_DARK)
+                dialog.dismiss()
+                val i = Intent(this, MainActivity::class.java)
+                startActivity(i)
+                finish()
+                overridePendingTransition(0, 0)
+            }
+        }
+
+        dialog.show()
+        dialog.window?.setLayout(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        )
     }
 
     //Callback for binding this activity to Service(PlayerService)

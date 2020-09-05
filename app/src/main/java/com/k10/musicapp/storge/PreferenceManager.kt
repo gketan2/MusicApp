@@ -4,8 +4,10 @@ import android.content.SharedPreferences
 import com.k10.musicapp.datamodel.SongObject
 import com.k10.musicapp.di.LastPlayedSong
 import javax.inject.Inject
+import javax.inject.Singleton
 
-class Preference @Inject constructor(
+@Singleton
+class PreferenceManager @Inject constructor(
     @LastPlayedSong private val lastPlayedPreferences: SharedPreferences,
     @LastPlayedSong private val editPlayedPreferences: SharedPreferences.Editor
 ) {

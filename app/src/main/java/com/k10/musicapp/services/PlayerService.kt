@@ -17,7 +17,7 @@ import androidx.lifecycle.MediatorLiveData
 import com.k10.musicapp.datamodel.PlaybackObject
 import com.k10.musicapp.datamodel.SongObject
 import com.k10.musicapp.notification.CustomNotification
-import com.k10.musicapp.storge.Preference
+import com.k10.musicapp.storge.PreferenceManager
 import com.k10.musicapp.utils.CommandOrigin
 import com.k10.musicapp.utils.Constants
 import com.k10.musicapp.utils.PlayerRequestType
@@ -52,7 +52,7 @@ class PlayerService : Service(), MusicPlayerListener, AudioManager.OnAudioFocusC
     private var telephonyManager: TelephonyManager? = null
 
     @Inject
-    lateinit var preference: Preference
+    lateinit var preference: PreferenceManager
 
     /**
      * General Binder Class to contact from a view component.
@@ -102,6 +102,8 @@ class PlayerService : Service(), MusicPlayerListener, AudioManager.OnAudioFocusC
             currentSongLiveData.value = currentSong!!
             playThisSong(currentSong!!)
             pausePlayback()
+        } else {
+            currentSongLiveData.postValue(null)
         }
 
         registerPhoneStateListener()
@@ -114,6 +116,7 @@ class PlayerService : Service(), MusicPlayerListener, AudioManager.OnAudioFocusC
             CoroutineScope(Dispatchers.Default).launch {
                 preference.setLastPlaying(currentSong!!)
                 currentSong = null
+                currentSongLiveData.postValue(null)
             }
         }
         musicPlayer?.destroy()
@@ -175,14 +178,20 @@ class PlayerService : Service(), MusicPlayerListener, AudioManager.OnAudioFocusC
 
     private fun playPausePlayback() {
         if (currentSong != null) {
-            if (musicPlayer?.currentState!! == PlayerState.PLAYING
-                || musicPlayer?.orderedState == PlayerState.PLAYING) {
+/*            if (musicPlayer?.currentState!! == PlayerState.PLAYING
+                || musicPlayer?.orderedState == PlayerState.PLAYING
+            ) {
                 pausePlayback()
-            } else if (musicPlayer?.currentState!! == PlayerState.PAUSED
+            } else*/ if (musicPlayer?.currentState!! == PlayerState.PAUSED
                 || musicPlayer?.orderedState == PlayerState.PAUSED
                 || musicPlayer?.currentState!! < PlayerState.PREPARING
+                || musicPlayer?.currentState == PlayerState.PLAYBACK_COMPLETE
             ) {
                 playPlayback()
+            } else if (musicPlayer?.currentState!! == PlayerState.PLAYING
+                || musicPlayer?.orderedState == PlayerState.PLAYING
+                || musicPlayer?.currentState!! >= PlayerState.PREPARING){
+                pausePlayback()
             }
         } else {
             Log.d(TAG, "playPausePlayback: creating fake object since null from preference")
@@ -215,6 +224,7 @@ class PlayerService : Service(), MusicPlayerListener, AudioManager.OnAudioFocusC
      * (therefore may produce error)
      * */
     private fun pausePlayback() {
+        removeAudioFocus()
         musicPlayer?.pausePlayback()
         updateNotification(true)
         stopForeground(false)
@@ -246,11 +256,13 @@ class PlayerService : Service(), MusicPlayerListener, AudioManager.OnAudioFocusC
     /**
      * wrapper of playThisUrl(uri, seek), just to store song in lastPlaying in sharedPreference
      */
-    private fun playThisSong(songObject: SongObject) {
+    fun playThisSong(songObject: SongObject) {
         //Storing current playing song to lastPlaying song in preference
         CoroutineScope(Dispatchers.Default).launch {
-            preference.setLastPlaying(currentSong!!)
+            preference.setLastPlaying(songObject)
+            currentSongLiveData.postValue(songObject)
         }
+        currentSong = songObject
         playThisUrl(songObject.songStreamUrl, songObject.storedPlaybackSeek)
     }
 
@@ -267,6 +279,7 @@ class PlayerService : Service(), MusicPlayerListener, AudioManager.OnAudioFocusC
     override fun onPlaybackComplete() {
         //Stops if no song is in the list,
         //then the playback stops.
+        Log.d(TAG, "onPlaybackComplete: ${currentSong?.songName} - completed")
         if (currentPlaylist != null) {
             if (currentPlaylist?.size!! > 0) {
                 currentPlayingIndex = (currentPlayingIndex + 1) % currentPlaylist?.size!!

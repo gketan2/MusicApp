@@ -3,14 +3,21 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="64dp"
-    android:background="@drawable/background_gradient">
+    android:background="?attr/backgroundStartColor">
+
+<!--    <androidx.appcompat.widget.AppCompatSeekBar-->
+<!--        android:layout_width="0dp"-->
+<!--        android:layout_height="2dp"-->
+<!--        app:layout_constraintTop_toTopOf="parent"-->
+<!--        app:layout_constraintStart_toStartOf="parent"-->
+<!--        app:layout_constraintEnd_toEndOf="parent" />-->
 
     <ImageView
         android:id="@+id/floatingImageView"
         android:layout_width="64dp"
         android:layout_height="64dp"
 
-        android:src="@drawable/poster"
+        android:contentDescription="image"
 
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
@@ -37,6 +44,7 @@
         android:layout_height="64dp"
 
         android:src="@drawable/ic_pause"
+        android:contentDescription="play_pause"
         android:scaleType="centerInside"
         android:backgroundTint="#00000000"
 

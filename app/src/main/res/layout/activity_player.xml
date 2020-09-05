@@ -13,6 +13,7 @@
         android:layout_height="70dp"
         android:layout_margin="8dp"
 
+        app:neumorph_shadowElevation="8dp"
         app:neumorph_shadowColorLight="?attr/lightSourceColor"
         app:neumorph_shadowColorDark="?attr/shadowColor"
         app:neumorph_backgroundColor="?attr/buttonBackground"
@@ -48,7 +49,7 @@
         app:layout_constraintWidth_max="300dp"
         app:layout_constraintDimensionRatio="1"
 
-        app:neumorph_shadowElevation="8dp"
+        app:neumorph_shadowElevation="10dp"
         app:neumorph_shadowColorLight="?attr/lightSourceColor"
         app:neumorph_shadowColorDark="?attr/shadowColor"
         app:neumorph_strokeColor="?attr/strokeColor"
@@ -64,8 +65,7 @@
         <de.hdodenhof.circleimageview.CircleImageView
             android:id="@+id/playerSongPoster"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:src="@drawable/poster"/>
+            android:layout_height="match_parent"/>
 
     </soup.neumorphism.NeumorphCardView>
 
@@ -75,7 +75,6 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
 
-        android:text="Song Name"
         android:textSize="20sp"
         android:textColor="?attr/textColor"
         android:textStyle="bold"
@@ -90,7 +89,6 @@
         android:layout_height="wrap_content"
         android:layout_marginBottom="8dp"
 
-        android:text="Singer Name"
         android:textSize="16sp"
         android:textColor="?attr/subTextColor"
 
@@ -131,6 +129,7 @@
         android:layout_marginBottom="24dp"
 
         android:thumb="@drawable/seekbar_thumb"
+        android:progressDrawable="@drawable/seekbar_style"
 
         android:max="1000"
 
@@ -143,7 +142,7 @@
         android:layout_width="75dp"
         android:layout_height="75dp"
 
-        app:neumorph_shadowElevation="5dp"
+        app:neumorph_shadowElevation="8dp"
         app:neumorph_shadowColorLight="?attr/lightSourceColor"
         app:neumorph_shadowColorDark="?attr/shadowColor"
         app:neumorph_backgroundColor="?attr/buttonBackground"
@@ -165,7 +164,7 @@
         android:layout_height="100dp"
         android:layout_marginBottom="24dp"
 
-        app:neumorph_shadowElevation="5dp"
+        app:neumorph_shadowElevation="8dp"
         app:neumorph_shadowColorLight="?attr/lightSourceColor"
         app:neumorph_shadowColorDark="?attr/shadowColor"
         app:neumorph_backgroundColor="?attr/buttonBackground"
@@ -186,7 +185,7 @@
         android:layout_width="75dp"
         android:layout_height="75dp"
 
-        app:neumorph_shadowElevation="5dp"
+        app:neumorph_shadowElevation="8dp"
         app:neumorph_shadowColorLight="?attr/lightSourceColor"
         app:neumorph_shadowColorDark="?attr/shadowColor"
         app:neumorph_backgroundColor="?attr/buttonBackground"

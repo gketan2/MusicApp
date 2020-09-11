@@ -10,7 +10,9 @@ Streaming from the freeware server(yet to selected).
 >[Jamendo](https://developer.jamendo.com/v3.0)</br>
 [Free Music Archive](https://freemusicarchive.org/)</br>
 
-Currently NO sophisticated Music Streaming API is present. Hence Stopping this for now.</br>
+```diff
+- Currently NO sophisticated Music Streaming API is present. Hence Stopping this for now.
+```
 ##### Features Implemented
 >Play Song Using Foreground Service.</br>
 Handle Play/Pause from notification(By using Pending Intent).</br>

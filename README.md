@@ -20,3 +20,7 @@ Save Currently Playing Song in SharedPreference so that next time user can repla
 Play Song From List of Song(Currently fake since no good server found)</br>
 Change Theme (Dark/ Light)</br>
 UI using Neumorphism design provided by [fornewid](https://github.com/fornewid/neumorphism).</br>
+
+<img src="/screenshot/player_light.jpg?raw=true" alt="Player UI in light mode" width="216" height="437">       <img src="/screenshot/player_dark.jpg?raw=true" alt="Player UI in dark mode" width="216" height="437">
+
+<img src="/screenshot/list+light.jpg?raw=true" alt="List UI in light mode" width="216" height="437">       <img src="/screenshot/list_dark.jpg?raw=true" alt="List UI in dark mode" width="216" height="437">
